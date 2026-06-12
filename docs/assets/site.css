@@ -1,0 +1,89 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  background: #f7f7f8;
+  color: #1f2937;
+}
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 18px 48px;
+}
+
+header {
+  margin-bottom: 28px;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.05;
+  margin: 0 0 12px;
+}
+
+h2 {
+  margin-top: 32px;
+}
+
+.lead {
+  font-size: 1.08rem;
+  color: #4b5563;
+  max-width: 760px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.card p {
+  color: #4b5563;
+  margin-bottom: 16px;
+}
+
+a.button {
+  display: inline-block;
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  font-weight: 650;
+}
+
+a {
+  color: #111827;
+}
+
+.hint {
+  background: #eef2ff;
+  border-left: 4px solid #6366f1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #374151;
+}
+
+code {
+  background: #e5e7eb;
+  padding: 0.1em 0.35em;
+  border-radius: 0.35em;
+}

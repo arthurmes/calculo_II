@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visualizações 3D para Cálculo II</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Visualizações 3D para Cálculo II</h1>
+      <p class="lead">
+        Uma pequena coleção de superfícies interativas para discutir gráficos, planos tangentes,
+        pontos críticos, regiões e sólidos. Arraste com o mouse ou com o dedo para girar.
+      </p>
+    </header>
+
+    <p class="hint">
+      No celular: use um dedo para girar, dois dedos para aproximar/afastar. Se ficar pesado,
+      recarregue a página e evite muitas abas abertas.
+    </p>
+
+    <section class="grid">
+      <article class="card">
+        <h3>Paraboloide elíptico</h3>
+        <p><code>z = x² + y²</code>. Bom para discutir mínimo local, curvas de nível e simetria.</p>
+        <a class="button" href="superficies/paraboloide.html">Abrir superfície</a>
+      </article>
+
+      <article class="card">
+        <h3>Superfície de sela</h3>
+        <p><code>z = x² - y²</code>. Exemplo clássico de ponto crítico que não é extremo.</p>
+        <a class="button" href="superficies/sela.html">Abrir superfície</a>
+      </article>
+
+      <article class="card">
+        <h3>Plano tangente</h3>
+        <p>Paraboloide com plano tangente em um ponto. Útil para linearização.</p>
+        <a class="button" href="superficies/plano_tangente.html">Abrir superfície</a>
+      </article>
+
+      <article class="card">
+        <h3>Sólido sob uma superfície</h3>
+        <p>Visualização do volume sob <code>z = 4 - x² - y²</code> sobre uma região circular.</p>
+        <a class="button" href="superficies/solido_paraboloide.html">Abrir superfície</a>
+      </article>
+    </section>
+
+    <h2>Como isto foi feito</h2>
+    <p>
+      As figuras foram geradas com Python + Plotly e exportadas para HTML.
+      O site pode ser publicado pelo GitHub Pages a partir da pasta <code>docs/</code>.
+    </p>
+  </main>
+</body>
+</html>
