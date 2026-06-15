@@ -198,10 +198,97 @@ def solido_paraboloide():
         "Volume sob z = 4 - x² - y² sobre o disco x² + y² ≤ 4."
     )
 
+def campo_vetorial(nome_arquivo, titulo, descricao, field_func, lim=2, n=5):
+    x = np.linspace(-lim, lim, n)
+    y = np.linspace(-lim, lim, n)
+    z = np.linspace(-lim, lim, n)
+    X, Y, Z = np.meshgrid(x, y, z)
+
+    U, V, W = field_func(X, Y, Z)
+
+    # Normaliza para as setas não ficarem gigantes
+    N = np.sqrt(U**2 + V**2 + W**2)
+    N[N == 0] = 1
+    U, V, W = U / N, V / N, W / N
+
+    fig = go.Figure(data=[
+        go.Cone(
+            x=X.flatten(), y=Y.flatten(), z=Z.flatten(),
+            u=U.flatten(), v=V.flatten(), w=W.flatten(),
+            sizemode="absolute",
+            sizeref=0.35,
+            showscale=False,
+            anchor="tail"
+        )
+    ])
+
+    fig.update_layout(**scene_layout(titulo))
+
+    write_page(fig, nome_arquivo, titulo, descricao)
+
+def campo_radial():
+    campo_vetorial(
+        "campo_radial.html",
+        "Campo radial",
+        "Campo F(x,y,z) = (x,y,z). As setas apontam para fora da origem.",
+        lambda X, Y, Z: (X, Y, Z)
+    )
+
+
+def campo_rotacional_z():
+    campo_vetorial(
+        "campo_rotacional_z.html",
+        "Campo rotacional em torno do eixo z",
+        "Campo F(x,y,z) = (-y,x,0). Bom para visualizar rotação e discutir rotacional.",
+        lambda X, Y, Z: (-Y, X, 0*Z)
+    )
+
+
+def campo_helicoidal():
+    campo_vetorial(
+        "campo_helicoidal.html",
+        "Campo helicoidal",
+        "Campo F(x,y,z) = (-y,x,1). As setas giram em torno do eixo z enquanto sobem.",
+        lambda X, Y, Z: (-Y, X, 1 + 0*Z)
+    )
+
+
+def campo_sela():
+    campo_vetorial(
+        "campo_sela_3d.html",
+        "Campo tipo sela",
+        "Campo F(x,y,z) = (x,-y,0). Expande em uma direção e contrai em outra.",
+        lambda X, Y, Z: (X, -Y, 0*Z)
+    )
+
+
+def campo_constante():
+    campo_vetorial(
+        "campo_constante.html",
+        "Campo constante",
+        "Campo F(x,y,z) = (1,1,1). Todas as setas têm a mesma direção.",
+        lambda X, Y, Z: (1 + 0*X, 1 + 0*Y, 1 + 0*Z)
+    )
+
+
+def campo_gradiente_quadratico():
+    campo_vetorial(
+        "campo_gradiente_quadratico.html",
+        "Campo gradiente quadrático",
+        "Campo F = grad(x² + y² + z²) = (2x,2y,2z). Exemplo conservativo.",
+        lambda X, Y, Z: (2*X, 2*Y, 2*Z)
+    )
+
 
 if __name__ == "__main__":
     paraboloide()
     sela()
     plano_tangente()
     solido_paraboloide()
+    campo_radial()
+    campo_rotacional_z()
+    campo_helicoidal()
+    campo_sela()
+    campo_constante()
+    campo_gradiente_quadratico()
     print("Arquivos gerados em docs/superficies/")
