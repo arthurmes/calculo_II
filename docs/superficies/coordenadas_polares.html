@@ -98,7 +98,7 @@
 
   <p>
     Visualize a transformação <strong>x = r cos θ</strong>, <strong>y = r sen θ</strong>,
-    as regiões descritas por limites em <strong>r</strong> e <strong>θ</strong> e superfícies
+    as regiões descritas por limites em <strong>r</strong> e <strong>θ</strong>, superfícies elementares e superfícies
     escritas naturalmente nessas coordenadas. Arraste a figura para girar.
   </p>
 
@@ -108,12 +108,15 @@
       <select id="example">
         <option value="coords">1. O ponto (r, θ) no plano xy</option>
         <option value="sector">2. Um retângulo em (r, θ) vira um setor anular</option>
-        <option value="ex12">3. Lista 4, Ex. 12 — quarto de disco e integrando radial</option>
-        <option value="ex13">4. Lista 4, Ex. 13 — paraboloide z = 9 − r²</option>
-        <option value="ex14">5. Lista 4, Ex. 14 — esfera z = √(9 − r²)</option>
-        <option value="ex17">6. Lista 4, Ex. 17 — cone sobre r ≤ 2 cos θ</option>
-        <option value="ex20">7. Lista 4, Ex. 20 — cardioide e z = sen θ</option>
-        <option value="ex21">8. Lista 4, Ex. 21 — região entre duas voltas de r = θ</option>
+        <option value="sphere">3. Esfera inteira — x² + y² + z² = 4</option>
+        <option value="paraboloid">4. Paraboloide — z = x² + y² = r²</option>
+        <option value="cone">5. Cone circular — z = √(x²+y²) = r</option>
+        <option value="ex12">6. Lista 4, Ex. 12 — quarto de disco e integrando radial</option>
+        <option value="ex13">7. Lista 4, Ex. 13 — paraboloide z = 9 − r²</option>
+        <option value="ex14">8. Lista 4, Ex. 14 — esfera z = √(9 − r²)</option>
+        <option value="ex17">9. Lista 4, Ex. 17 — cone sobre r ≤ 2 cos θ</option>
+        <option value="ex20">10. Lista 4, Ex. 20 — cardioide e z = sen θ</option>
+        <option value="ex21">11. Lista 4, Ex. 21 — região entre duas voltas de r = θ</option>
       </select>
 
       <div class="checks">
@@ -206,6 +209,45 @@
       formulaTitle: "Leitura geométrica",
       formula: "[1, 2,5] × [π/6, 2π/3] no plano (r,θ) vira um setor anular no plano (x,y)",
       note: "Este é o exemplo-base para ler integrais polares: limites constantes em r e θ produzem duas circunferências e duas semirretas. A geometria deixa de parecer um retângulo quando voltamos ao plano xy."
+    },
+    sphere: {
+      kind: "sphere",
+      title: "Esfera inteira — x² + y² + z² = 4",
+      thetaMin: 0, thetaMax: 2*PI,
+      radius: 2,
+      rMin: () => 0,
+      rMax: () => 2,
+      theta0: PI/4,
+      limits: "0 ≤ r ≤ 2,   0 ≤ θ ≤ 2π,   z = ±√(4−r²)",
+      formulaTitle: "A esfera em coordenadas polares no plano xy",
+      formula: "x²+y²+z²=4  ⇒  r²+z²=4  ⇒  z=±√(4−r²)",
+      note: "Este é o exemplo mais limpo de simetria radial: θ desaparece completamente da equação. Para cada θ fixo, a seção é um semicírculo no plano vertical; ao variar θ, esse semicírculo gira em torno do eixo z e gera a esfera inteira."
+    },
+    paraboloid: {
+      kind: "surface",
+      title: "Paraboloide circular — z = r²",
+      thetaMin: 0, thetaMax: 2*PI,
+      rMin: () => 0,
+      rMax: () => 2,
+      z: (r) => r*r,
+      theta0: PI/4,
+      limits: "0 ≤ r ≤ 2,   0 ≤ θ ≤ 2π   (janela de visualização)",
+      formulaTitle: "Paraboloide em polares",
+      formula: "z=x²+y²  ⇒  z=r²",
+      note: "O paraboloide é ilimitado; aqui usamos r≤2 apenas como janela de visualização. Em polares, a simetria circular fica explícita e a superfície deixa de depender de θ."
+    },
+    cone: {
+      kind: "surface",
+      title: "Cone circular — z = r",
+      thetaMin: 0, thetaMax: 2*PI,
+      rMin: () => 0,
+      rMax: () => 2,
+      z: (r) => r,
+      theta0: PI/4,
+      limits: "0 ≤ r ≤ 2,   0 ≤ θ ≤ 2π   (janela de visualização)",
+      formulaTitle: "Cone em polares",
+      formula: "z=√(x²+y²)  ⇒  z=r",
+      note: "Outro exemplo elementar: em coordenadas cartesianas aparece uma raiz; em polares a superfície vira simplesmente z=r. Cada θ fixo produz a mesma reta geratriz do cone."
     },
     ex12: {
       kind: "surface",
@@ -474,6 +516,137 @@
       .then(()=>restoreCamera(saved));
   }
 
+  function sphereGrid(ex, nt=120, nr=60) {
+    const ts=linspace(ex.thetaMin,ex.thetaMax,nt);
+    const rs=linspace(0,ex.radius,nr);
+    const X=[],Y=[],ZT=[],ZB=[],Z0=[];
+    for(const t of ts){
+      const xr=[],yr=[],zt=[],zb=[],z0=[];
+      for(const r of rs){
+        const z=Math.sqrt(Math.max(0,ex.radius*ex.radius-r*r));
+        xr.push(r*Math.cos(t));
+        yr.push(r*Math.sin(t));
+        zt.push(z);
+        zb.push(-z);
+        z0.push(0);
+      }
+      X.push(xr);Y.push(yr);ZT.push(zt);ZB.push(zb);Z0.push(z0);
+    }
+    return {X,Y,ZT,ZB,Z0};
+  }
+
+  function sphereGridTraces(ex) {
+    const traces=[];
+    const tCount=12;
+    const rCount=6;
+
+    for(let m=0;m<tCount;m++){
+      const t=ex.thetaMin+(ex.thetaMax-ex.thetaMin)*m/(tCount-1);
+      const rs=linspace(0,ex.radius,90);
+      const zt=rs.map(r=>Math.sqrt(Math.max(0,ex.radius*ex.radius-r*r)));
+      const zb=zt.map(z=>-z);
+
+      traces.push({
+        type:"scatter3d",mode:"lines",
+        x:rs.map(r=>r*Math.cos(t)),y:rs.map(r=>r*Math.sin(t)),z:zt,
+        line:{color:"#374151",width:2},hoverinfo:"skip",showlegend:false
+      });
+      traces.push({
+        type:"scatter3d",mode:"lines",
+        x:rs.map(r=>r*Math.cos(t)),y:rs.map(r=>r*Math.sin(t)),z:zb,
+        line:{color:"#374151",width:2},hoverinfo:"skip",showlegend:false
+      });
+    }
+
+    for(let m=1;m<rCount;m++){
+      const r=ex.radius*m/rCount;
+      const ts=linspace(0,2*PI,160);
+      const z=Math.sqrt(Math.max(0,ex.radius*ex.radius-r*r));
+      traces.push({
+        type:"scatter3d",mode:"lines",
+        x:ts.map(t=>r*Math.cos(t)),y:ts.map(t=>r*Math.sin(t)),z:ts.map(()=>z),
+        line:{color:"#374151",width:2},hoverinfo:"skip",showlegend:false
+      });
+      traces.push({
+        type:"scatter3d",mode:"lines",
+        x:ts.map(t=>r*Math.cos(t)),y:ts.map(t=>r*Math.sin(t)),z:ts.map(()=>-z),
+        line:{color:"#374151",width:2},hoverinfo:"skip",showlegend:false
+      });
+    }
+    return traces;
+  }
+
+  function sphereSlice(ex,t) {
+    const rs=linspace(0,ex.radius,130);
+    const top=rs.map(r=>Math.sqrt(Math.max(0,ex.radius*ex.radius-r*r)));
+    const rr=rs.concat(rs.slice().reverse());
+    const zz=top.concat(top.slice().reverse().map(z=>-z));
+    return {
+      type:"scatter3d",mode:"lines",
+      x:rr.map(r=>r*Math.cos(t)),
+      y:rr.map(r=>r*Math.sin(t)),
+      z:zz,
+      line:{color:"#c2410c",width:8},
+      hoverinfo:"skip",showlegend:false
+    };
+  }
+
+  function renderSphere(preserveCamera=false) {
+    const ex=examples.sphere;
+    const saved=preserveCamera?cloneCamera():null;
+    const g=sphereGrid(ex);
+    const t=Number(thetaSlider.value);
+
+    const floor={
+      type:"surface",x:g.X,y:g.Y,z:g.Z0,
+      colorscale:[[0,"#9ca3af"],[1,"#9ca3af"]],showscale:false,
+      opacity:showFloor.checked?0.16:0,
+      hoverinfo:"skip",name:"projeção"
+    };
+    const top={
+      type:"surface",x:g.X,y:g.Y,z:g.ZT,
+      colorscale:"Viridis",showscale:false,opacity:0.82,
+      hovertemplate:"x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+      name:"hemisfério superior"
+    };
+    const bottom={
+      type:"surface",x:g.X,y:g.Y,z:g.ZB,
+      colorscale:"Viridis",reversescale:true,showscale:false,opacity:0.82,
+      hovertemplate:"x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+      name:"hemisfério inferior"
+    };
+
+    const traces=[floor,top,bottom];
+    if(showGrid.checked) traces.push(...sphereGridTraces(ex));
+    traces.push(sphereSlice(ex,t));
+
+    positionText.textContent=`θ = ${fmt(t)}; seção vertical destacada da esfera`;
+    limitsText.textContent=ex.limits;
+    formulaTitle.textContent=ex.formulaTitle;
+    formulaText.textContent=ex.formula;
+    note.textContent=ex.note;
+
+    const B=ex.radius*1.08;
+    const layout={
+      title:{text:ex.title,x:0.02,xanchor:"left"},
+      margin:{l:0,r:0,t:52,b:0},
+      uirevision:"polar-camera",
+      scene:{
+        uirevision:"polar-camera",
+        xaxis:{title:"x",range:[-B,B]},
+        yaxis:{title:"y",range:[-B,B]},
+        zaxis:{title:"z",range:[-B,B]},
+        aspectmode:"cube",
+        camera:{eye:{x:1.45,y:1.45,z:1.15}},
+        bgcolor:"#fff"
+      },
+      showlegend:false,paper_bgcolor:"#fff",plot_bgcolor:"#fff"
+    };
+
+    Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,scrollZoom:true})
+      .then(()=>restoreCamera(saved));
+  }
+
   function renderSurface(preserveCamera=false) {
     const ex=examples[exampleSelect.value];
     const saved=preserveCamera?cloneCamera():null;
@@ -554,6 +727,7 @@
   function render(preserveCamera=false) {
     const ex=examples[exampleSelect.value];
     if(ex.kind==="coords") renderCoords(preserveCamera);
+    else if(ex.kind==="sphere") renderSphere(preserveCamera);
     else renderSurface(preserveCamera);
   }
 
