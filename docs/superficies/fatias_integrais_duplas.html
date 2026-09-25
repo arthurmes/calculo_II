@@ -158,7 +158,7 @@
       <a href="../index.html">Voltar</a>
     </div>
     <p>
-      Escolha um exemplo da Lista 4 e mova a fatia. A superfície representa o integrando sobre a região.
+      Comece pelo exemplo introdutório e depois passe aos exemplos da Lista 4. A superfície representa o integrando sobre a região.
       Alterne entre <strong>x fixo</strong> e <strong>y fixo</strong> para enxergar as duas ordens de integração.
     </p>
 
@@ -166,6 +166,7 @@
       <div class="panel">
         <label for="example">Exemplo</label>
         <select id="example">
+          <option value="intro">Introdutório — paraboloide z = x² + y² sobre um triângulo</option>
           <option value="ex3">Exercício 3 — região sob y = 4 e acima de y = x²</option>
           <option value="ex5c">Exercício 5(c) — região triangular, uma ordem exige divisão</option>
           <option value="ex6">Exercício 6 — trocar a ordem resolve a integral</option>
@@ -219,6 +220,23 @@
   const note = $("note");
 
   const examples = {
+    intro: {
+      title: "Introdutório — ∬R (x² + y²) dA",
+      xMin: 0, xMax: 1, yMin: 0, yMax: 1,
+      zMinHint: 0, zMaxHint: 1.1,
+      f: (x,y) => x*x + y*y,
+      fixedX: {
+        min: 0, max: 1,
+        span: (x) => [0, 1-x],
+        setup: "∫₀¹ ∫₀^(1−x) (x² + y²) dy dx"
+      },
+      fixedY: {
+        min: 0, max: 1,
+        span: (y) => [0, 1-y],
+        setup: "∫₀¹ ∫₀^(1−y) (x² + y²) dx dy"
+      },
+      note: "Aquecimento: R é o triângulo x ≥ 0, y ≥ 0, x + y ≤ 1. Nas duas ordens há uma única fatia, então dá para separar claramente a geometria da região da altura z = x² + y². O valor da integral é 1/6."
+    },
     ex3: {
       title: "Exercício 3 — I = ∬R 2x sen(y²) dA",
       xMin: 0, xMax: 2, yMin: 0, yMax: 4,
@@ -415,6 +433,18 @@
     note.textContent = ex.note;
   }
 
+  function cloneCamera() {
+    const camera = plot && plot._fullLayout && plot._fullLayout.scene
+      ? plot._fullLayout.scene.camera
+      : null;
+    return camera ? JSON.parse(JSON.stringify(camera)) : null;
+  }
+
+  function restoreCamera(camera) {
+    if (!camera) return Promise.resolve();
+    return Plotly.relayout(plot, {"scene.camera": camera});
+  }
+
   function updateSlice() {
     const ex = examples[exampleSelect.value];
     const value = Number(slider.value);
@@ -425,22 +455,19 @@
       ? `x = ${fmt(value)},   ${fmt(a)} ≤ y ≤ ${fmt(b)}`
       : `y = ${fmt(value)},   ${fmt(a)} ≤ x ≤ ${fmt(b)}`;
 
-    /*
-      Só atualizamos os dados das duas traces da fatia.
-      A câmera 3D não é reconstruída, portanto o ponto de vista escolhido
-      pelo professor fica exatamente onde está enquanto o slider se move.
-    */
-    Plotly.restyle(plot, {
-      x: [sl.curtain.x],
-      y: [sl.curtain.y],
-      z: [sl.curtain.z]
-    }, [SLICE_CURTAIN]);
+    // Guarda exatamente a câmera que o usuário deixou antes de mexer no slider.
+    const savedCamera = cloneCamera();
 
-    Plotly.restyle(plot, {
-      x: [sl.topLine.x],
-      y: [sl.topLine.y],
-      z: [sl.topLine.z]
-    }, [SLICE_LINE]);
+    // Atualiza somente as duas traces móveis, sem recriar layout, eixos ou cena 3D.
+    plot.data[SLICE_CURTAIN].x = sl.curtain.x;
+    plot.data[SLICE_CURTAIN].y = sl.curtain.y;
+    plot.data[SLICE_CURTAIN].z = sl.curtain.z;
+
+    plot.data[SLICE_LINE].x = sl.topLine.x;
+    plot.data[SLICE_LINE].y = sl.topLine.y;
+    plot.data[SLICE_LINE].z = sl.topLine.z;
+
+    return Plotly.redraw(plot).then(() => restoreCamera(savedCamera));
   }
 
   function renderExample() {
@@ -525,9 +552,9 @@
     const layout = {
       title: {text: ex.title, x: 0.02, xanchor: "left"},
       margin: {l:0, r:0, t:52, b:0},
-      uirevision: "example-" + exampleSelect.value,
+      uirevision: "fatias-camera",
       scene: {
-        uirevision: "scene-" + exampleSelect.value,
+        uirevision: "fatias-camera",
         xaxis: {title:"x", range:[ex.xMin,ex.xMax]},
         yaxis: {title:"y", range:[ex.yMin,ex.yMax]},
         zaxis: {title:"z = f(x,y)", range:[ex.zMinHint,ex.zMaxHint]},
