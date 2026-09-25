@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fatias em integrais duplas</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      color: #1f2937;
+      background: #f7f7f8;
+    }
+    body { margin: 0; }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px 14px 32px;
+    }
+    .top {
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      margin: 0;
+    }
+    h2 {
+      font-size: 1rem;
+      margin: 0 0 8px;
+    }
+    p { color: #4b5563; }
+    a { color: #111827; font-weight: 650; }
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(230px, 1.2fr) minmax(250px, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+    }
+    label {
+      display: block;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+    select, input[type="range"] {
+      width: 100%;
+    }
+    select {
+      min-height: 42px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: white;
+      font-size: 1rem;
+    }
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .segmented button {
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #111827;
+      border-radius: 10px;
+      padding: 10px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .segmented button.active {
+      background: #111827;
+      color: white;
+      border-color: #111827;
+    }
+    .readout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0 0;
+    }
+    .readout div {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-width: 0;
+    }
+    .readout strong {
+      display: block;
+      font-size: .83rem;
+      color: #6b7280;
+      margin-bottom: 3px;
+    }
+    code {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      background: #eef2f7;
+      padding: .1em .35em;
+      border-radius: .35em;
+    }
+    #plot {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 660px;
+    }
+    .note {
+      margin-top: 14px;
+      background: #eef2ff;
+      border-left: 4px solid #6366f1;
+      border-radius: 10px;
+      padding: 11px 13px;
+      color: #374151;
+    }
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: .92rem;
+      color: #4b5563;
+      margin: 10px 2px 0;
+    }
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      margin-right: 5px;
+      vertical-align: baseline;
+    }
+    .dot.surface { background: #7c83fd; }
+    .dot.slice { background: #ef8354; }
+    .dot.floor { background: #9ca3af; }
+
+    @media (max-width: 760px) {
+      .controls, .readout { grid-template-columns: 1fr; }
+      #plot { min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <h1>Fatias em integrais duplas</h1>
+      <a href="../index.html">Voltar</a>
+    </div>
+    <p>
+      Escolha um exemplo da Lista 4 e mova a fatia. A superfície representa o integrando sobre a região.
+      Alterne entre <strong>x fixo</strong> e <strong>y fixo</strong> para enxergar as duas ordens de integração.
+    </p>
+
+    <section class="controls">
+      <div class="panel">
+        <label for="example">Exemplo</label>
+        <select id="example">
+          <option value="ex3">Exercício 3 — região sob y = 4 e acima de y = x²</option>
+          <option value="ex5c">Exercício 5(c) — região triangular, uma ordem exige divisão</option>
+          <option value="ex6">Exercício 6 — trocar a ordem resolve a integral</option>
+          <option value="ex7">Exercício 7 — região x ≤ y²</option>
+        </select>
+
+        <div class="segmented" aria-label="Orientação da fatia">
+          <button id="fixX" type="button" class="active">x fixo → integrar em y</button>
+          <button id="fixY" type="button">y fixo → integrar em x</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <label id="sliderLabel" for="slice">Posição da fatia</label>
+        <input id="slice" type="range" min="0" max="2" step="0.01" value="1">
+        <div class="readout">
+          <div>
+            <strong>Fatia atual</strong>
+            <span id="sliceText"></span>
+          </div>
+          <div>
+            <strong>Integral na ordem escolhida</strong>
+            <span id="setupText"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="plot" role="img" aria-label="Visualização 3D interativa da integral dupla"></div>
+
+    <div class="legend">
+      <span><span class="dot surface"></span>superfície z = f(x,y)</span>
+      <span><span class="dot slice"></span>fatia atual</span>
+      <span><span class="dot floor"></span>região no plano xy</span>
+    </div>
+
+    <div class="note" id="note"></div>
+  </main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const plot = $("plot");
+  const exampleSelect = $("example");
+  const slider = $("slice");
+  const fixX = $("fixX");
+  const fixY = $("fixY");
+  const sliderLabel = $("sliderLabel");
+  const sliceText = $("sliceText");
+  const setupText = $("setupText");
+  const note = $("note");
+
+  const examples = {
+    ex3: {
+      title: "Exercício 3 — I = ∬R 2x sen(y²) dA",
+      xMin: 0, xMax: 2, yMin: 0, yMax: 4,
+      zMinHint: -4.4, zMaxHint: 4.4,
+      inside: (x,y) => y >= x*x - 1e-10 && y <= 4 + 1e-10,
+      f: (x,y) => 2*x*Math.sin(y*y),
+      fixedX: {
+        min: 0, max: 2,
+        span: (x) => [x*x, 4],
+        setup: "∫₀² ∫ₓ²⁴ 2x sen(y²) dy dx"
+      },
+      fixedY: {
+        min: 0, max: 4,
+        span: (y) => [0, Math.sqrt(Math.max(0,y))],
+        setup: "∫₀⁴ ∫₀√ʸ 2x sen(y²) dx dy"
+      },
+      note: "Aqui a troca de ordem é estratégica: na ordem original aparece ∫sen(y²)dy; com y fixo, a integral interna em x vira imediata."
+    },
+    ex5c: {
+      title: "Exercício 5(c) — I = ∬T x y² dA",
+      xMin: 0, xMax: 3, yMin: 1, yMax: 3,
+      zMinHint: 0, zMaxHint: 28,
+      inside: (x,y) => y >= 1 - 1e-10 && y <= 3 + 1e-10 && x >= -1e-10 && x <= y + 1e-10,
+      f: (x,y) => x*y*y,
+      fixedX: {
+        min: 0, max: 3,
+        span: (x) => [Math.max(1,x), 3],
+        setup: "∫₀¹ ∫₁³ x y² dy dx  +  ∫₁³ ∫ₓ³ x y² dy dx"
+      },
+      fixedY: {
+        min: 1, max: 3,
+        span: (y) => [0, y],
+        setup: "∫₁³ ∫₀ʸ x y² dx dy"
+      },
+      note: "Este exemplo mostra por que às vezes é preciso quebrar a região: ao fixar x, o limite inferior de y muda quando x passa por 1."
+    },
+    ex6: {
+      title: "Exercício 6 — I = ∬R 2e^(y²) dA",
+      xMin: 0, xMax: 1, yMin: 0, yMax: 1,
+      zMinHint: 0, zMaxHint: 5.8,
+      inside: (x,y) => y >= x - 1e-10 && y <= 1 + 1e-10,
+      f: (x,y) => 2*Math.exp(y*y),
+      fixedX: {
+        min: 0, max: 1,
+        span: (x) => [x, 1],
+        setup: "∫₀¹ ∫ₓ¹ 2e^(y²) dy dx"
+      },
+      fixedY: {
+        min: 0, max: 1,
+        span: (y) => [0, y],
+        setup: "∫₀¹ ∫₀ʸ 2e^(y²) dx dy"
+      },
+      note: "É o melhor exemplo para mostrar que a ordem importa no cálculo: ∫e^(y²)dy não é elementar, mas integrar primeiro em x produz 2y e^(y²)."
+    },
+    ex7: {
+      title: "Exercício 7 — I = ∬R sen(πy³) dA",
+      xMin: 0, xMax: 9, yMin: 0, yMax: 3,
+      zMinHint: -1.1, zMaxHint: 1.1,
+      inside: (x,y) => x <= y*y + 1e-10 && x >= -1e-10 && y <= 3 + 1e-10,
+      f: (x,y) => Math.sin(Math.PI*y*y*y),
+      fixedX: {
+        min: 0, max: 9,
+        span: (x) => [Math.sqrt(Math.max(0,x)), 3],
+        setup: "∫₀⁹ ∫√ˣ³ sen(πy³) dy dx"
+      },
+      fixedY: {
+        min: 0, max: 3,
+        span: (y) => [0, y*y],
+        setup: "∫₀³ ∫₀ʸ² sen(πy³) dx dy"
+      },
+      note: "Ao fixar y, a largura da região é y². A integral interna em x simplesmente multiplica o integrando por essa largura."
+    }
+  };
+
+  let mode = "x";
+
+  function linspace(a,b,n) {
+    const out = [];
+    if (n <= 1) return [a];
+    for (let i=0; i<n; i++) out.push(a + (b-a)*i/(n-1));
+    return out;
+  }
+
+  function fmt(v) {
+    const rounded = Math.round(v*100)/100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+  }
+
+  function makeSurface(ex, nx=46, ny=46) {
+    const xs = linspace(ex.xMin, ex.xMax, nx);
+    const ys = linspace(ex.yMin, ex.yMax, ny);
+    const z = [];
+    const floor = [];
+    for (const y of ys) {
+      const zr = [];
+      const fr = [];
+      for (const x of xs) {
+        if (ex.inside(x,y)) {
+          zr.push(ex.f(x,y));
+          fr.push(0);
+        } else {
+          zr.push(null);
+          fr.push(null);
+        }
+      }
+      z.push(zr);
+      floor.push(fr);
+    }
+    return {xs, ys, z, floor};
+  }
+
+  function makeSlice(ex, value) {
+    const cfg = mode === "x" ? ex.fixedX : ex.fixedY;
+    const [a,b] = cfg.span(value);
+    const t = linspace(a,b,80);
+
+    let xs, ys;
+    if (mode === "x") {
+      xs = t.map(() => value);
+      ys = t;
+    } else {
+      xs = t;
+      ys = t.map(() => value);
+    }
+
+    const top = xs.map((x,i) => ex.f(x,ys[i]));
+    const zeros = top.map(() => 0);
+
+    return {
+      curtain: {
+        type: "surface",
+        x: [xs, xs],
+        y: [ys, ys],
+        z: [zeros, top],
+        colorscale: [[0,"#ef8354"],[1,"#ef8354"]],
+        showscale: false,
+        opacity: 0.62,
+        hoverinfo: "skip",
+        name: "Fatia"
+      },
+      topLine: {
+        type: "scatter3d",
+        mode: "lines",
+        x: xs,
+        y: ys,
+        z: top,
+        line: {color:"#c2410c", width:7},
+        hovertemplate: "x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+        name: "Topo da fatia"
+      },
+      interval: [a,b]
+    };
+  }
+
+  function updateControls() {
+    const ex = examples[exampleSelect.value];
+    const cfg = mode === "x" ? ex.fixedX : ex.fixedY;
+
+    slider.min = cfg.min;
+    slider.max = cfg.max;
+    slider.step = (cfg.max-cfg.min)/180;
+    slider.value = (cfg.min+cfg.max)/2;
+
+    fixX.classList.toggle("active", mode === "x");
+    fixY.classList.toggle("active", mode === "y");
+    sliderLabel.textContent = mode === "x"
+      ? "Posição: x = constante"
+      : "Posição: y = constante";
+
+    setupText.textContent = cfg.setup;
+    note.textContent = ex.note;
+  }
+
+  function render() {
+    const ex = examples[exampleSelect.value];
+    const value = Number(slider.value);
+    const mesh = makeSurface(ex);
+    const sl = makeSlice(ex, value);
+
+    const surface = {
+      type: "surface",
+      x: mesh.xs,
+      y: mesh.ys,
+      z: mesh.z,
+      showscale: false,
+      opacity: 0.82,
+      colorscale: "Viridis",
+      connectgaps: false,
+      hovertemplate: "x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+      name: "z=f(x,y)"
+    };
+
+    const floor = {
+      type: "surface",
+      x: mesh.xs,
+      y: mesh.ys,
+      z: mesh.floor,
+      showscale: false,
+      opacity: 0.25,
+      colorscale: [[0,"#9ca3af"],[1,"#9ca3af"]],
+      connectgaps: false,
+      hoverinfo: "skip",
+      name: "Região R"
+    };
+
+    const [a,b] = sl.interval;
+    sliceText.textContent = mode === "x"
+      ? `x = ${fmt(value)},   ${fmt(a)} ≤ y ≤ ${fmt(b)}`
+      : `y = ${fmt(value)},   ${fmt(a)} ≤ x ≤ ${fmt(b)}`;
+
+    const layout = {
+      title: {text: ex.title, x: 0.02, xanchor: "left"},
+      margin: {l:0, r:0, t:52, b:0},
+      uirevision: exampleSelect.value + "-" + mode,
+      scene: {
+        xaxis: {title:"x", range:[ex.xMin,ex.xMax]},
+        yaxis: {title:"y", range:[ex.yMin,ex.yMax]},
+        zaxis: {title:"z = f(x,y)", range:[ex.zMinHint,ex.zMaxHint]},
+        aspectmode: "manual",
+        aspectratio: {
+          x: 1.15,
+          y: Math.max(0.7, Math.min(1.15, (ex.yMax-ex.yMin)/(ex.xMax-ex.xMin || 1))),
+          z: 0.9
+        },
+        camera: {eye:{x:1.45,y:1.45,z:1.15}},
+        bgcolor: "#ffffff"
+      },
+      showlegend: false,
+      paper_bgcolor: "#ffffff",
+      plot_bgcolor: "#ffffff"
+    };
+
+    const config = {
+      responsive: true,
+      displaylogo: false,
+      scrollZoom: true
+    };
+
+    Plotly.react(plot, [floor, surface, sl.curtain, sl.topLine], layout, config);
+  }
+
+  function changeMode(next) {
+    mode = next;
+    updateControls();
+    render();
+  }
+
+  fixX.addEventListener("click", () => changeMode("x"));
+  fixY.addEventListener("click", () => changeMode("y"));
+
+  exampleSelect.addEventListener("change", () => {
+    updateControls();
+    render();
+  });
+
+  slider.addEventListener("input", render);
+
+  updateControls();
+  render();
+})();
+</script>
+</body>
+</html>
