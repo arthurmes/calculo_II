@@ -223,7 +223,6 @@
       title: "Exercício 3 — I = ∬R 2x sen(y²) dA",
       xMin: 0, xMax: 2, yMin: 0, yMax: 4,
       zMinHint: -4.4, zMaxHint: 4.4,
-      inside: (x,y) => y >= x*x - 1e-10 && y <= 4 + 1e-10,
       f: (x,y) => 2*x*Math.sin(y*y),
       fixedX: {
         min: 0, max: 2,
@@ -241,7 +240,6 @@
       title: "Exercício 5(c) — I = ∬T x y² dA",
       xMin: 0, xMax: 3, yMin: 1, yMax: 3,
       zMinHint: 0, zMaxHint: 28,
-      inside: (x,y) => y >= 1 - 1e-10 && y <= 3 + 1e-10 && x >= -1e-10 && x <= y + 1e-10,
       f: (x,y) => x*y*y,
       fixedX: {
         min: 0, max: 3,
@@ -259,7 +257,6 @@
       title: "Exercício 6 — I = ∬R 2e^(y²) dA",
       xMin: 0, xMax: 1, yMin: 0, yMax: 1,
       zMinHint: 0, zMaxHint: 5.8,
-      inside: (x,y) => y >= x - 1e-10 && y <= 1 + 1e-10,
       f: (x,y) => 2*Math.exp(y*y),
       fixedX: {
         min: 0, max: 1,
@@ -277,7 +274,6 @@
       title: "Exercício 7 — I = ∬R sen(πy³) dA",
       xMin: 0, xMax: 9, yMin: 0, yMax: 3,
       zMinHint: -1.1, zMaxHint: 1.1,
-      inside: (x,y) => x <= y*y + 1e-10 && x >= -1e-10 && y <= 3 + 1e-10,
       f: (x,y) => Math.sin(Math.PI*y*y*y),
       fixedX: {
         min: 0, max: 9,
@@ -294,6 +290,8 @@
   };
 
   let mode = "x";
+  const SLICE_CURTAIN = 3;
+  const SLICE_LINE = 4;
 
   function linspace(a,b,n) {
     const out = [];
@@ -304,36 +302,71 @@
 
   function fmt(v) {
     const rounded = Math.round(v*100)/100;
-    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+    return Number.isInteger(rounded)
+      ? String(rounded)
+      : rounded.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
   }
 
-  function makeSurface(ex, nx=46, ny=46) {
-    const xs = linspace(ex.xMin, ex.xMax, nx);
-    const ys = linspace(ex.yMin, ex.yMax, ny);
+  /*
+    Em vez de recortar uma malha retangular com nulls, parametrizamos
+    diretamente a região por fatias horizontais:
+        y = y(u),   x = x_esq(y) + v [x_dir(y)-x_esq(y)].
+    Isso faz a malha acompanhar exatamente as bordas da região e elimina
+    o "serrilhado" que aparecia nas curvas x = y², x = sqrt(y), etc.
+  */
+  function makeRegionMesh(ex, ny=96, nv=64) {
+    const x = [];
+    const y = [];
     const z = [];
-    const floor = [];
-    for (const y of ys) {
-      const zr = [];
-      const fr = [];
-      for (const x of xs) {
-        if (ex.inside(x,y)) {
-          zr.push(ex.f(x,y));
-          fr.push(0);
-        } else {
-          zr.push(null);
-          fr.push(null);
-        }
+    const i = [];
+    const j = [];
+    const k = [];
+
+    for (let iy=0; iy<ny; iy++) {
+      const yy = ex.yMin + (ex.yMax-ex.yMin)*iy/(ny-1);
+      const [xl,xr] = ex.fixedY.span(yy);
+
+      for (let iv=0; iv<nv; iv++) {
+        const t = iv/(nv-1);
+        const xx = xl + t*(xr-xl);
+        x.push(xx);
+        y.push(yy);
+        z.push(ex.f(xx,yy));
       }
-      z.push(zr);
-      floor.push(fr);
     }
-    return {xs, ys, z, floor};
+
+    for (let iy=0; iy<ny-1; iy++) {
+      for (let iv=0; iv<nv-1; iv++) {
+        const a = iy*nv + iv;
+        const b = a + 1;
+        const c = a + nv;
+        const d = c + 1;
+
+        i.push(a, a);
+        j.push(c, d);
+        k.push(d, b);
+      }
+    }
+
+    return {x,y,z,i,j,k};
+  }
+
+  function makeBoundary(ex, n=180) {
+    const ys = linspace(ex.yMin, ex.yMax, n);
+    const left = ys.map(y => ex.fixedY.span(y)[0]);
+    const right = ys.map(y => ex.fixedY.span(y)[1]);
+
+    const x = left.concat(right.slice().reverse(), [left[0]]);
+    const y = ys.concat(ys.slice().reverse(), [ys[0]]);
+    const z = x.map(() => 0);
+
+    return {x,y,z};
   }
 
   function makeSlice(ex, value) {
     const cfg = mode === "x" ? ex.fixedX : ex.fixedY;
     const [a,b] = cfg.span(value);
-    const t = linspace(a,b,80);
+    const t = linspace(a,b,120);
 
     let xs, ys;
     if (mode === "x") {
@@ -344,43 +377,33 @@
       ys = t.map(() => value);
     }
 
-    const top = xs.map((x,i) => ex.f(x,ys[i]));
+    const top = xs.map((x,idx) => ex.f(x,ys[idx]));
     const zeros = top.map(() => 0);
 
     return {
       curtain: {
-        type: "surface",
         x: [xs, xs],
         y: [ys, ys],
-        z: [zeros, top],
-        colorscale: [[0,"#ef8354"],[1,"#ef8354"]],
-        showscale: false,
-        opacity: 0.62,
-        hoverinfo: "skip",
-        name: "Fatia"
+        z: [zeros, top]
       },
-      topLine: {
-        type: "scatter3d",
-        mode: "lines",
-        x: xs,
-        y: ys,
-        z: top,
-        line: {color:"#c2410c", width:7},
-        hovertemplate: "x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
-        name: "Topo da fatia"
-      },
+      topLine: {x: xs, y: ys, z: top},
       interval: [a,b]
     };
   }
 
-  function updateControls() {
+  function updateControls(resetSlider=true) {
     const ex = examples[exampleSelect.value];
     const cfg = mode === "x" ? ex.fixedX : ex.fixedY;
 
     slider.min = cfg.min;
     slider.max = cfg.max;
-    slider.step = (cfg.max-cfg.min)/180;
-    slider.value = (cfg.min+cfg.max)/2;
+    slider.step = (cfg.max-cfg.min)/240;
+
+    if (resetSlider) {
+      slider.value = (cfg.min+cfg.max)/2;
+    } else {
+      slider.value = Math.min(cfg.max, Math.max(cfg.min, Number(slider.value)));
+    }
 
     fixX.classList.toggle("active", mode === "x");
     fixY.classList.toggle("active", mode === "y");
@@ -392,36 +415,106 @@
     note.textContent = ex.note;
   }
 
-  function render() {
+  function updateSlice() {
     const ex = examples[exampleSelect.value];
     const value = Number(slider.value);
-    const mesh = makeSurface(ex);
+    const sl = makeSlice(ex, value);
+    const [a,b] = sl.interval;
+
+    sliceText.textContent = mode === "x"
+      ? `x = ${fmt(value)},   ${fmt(a)} ≤ y ≤ ${fmt(b)}`
+      : `y = ${fmt(value)},   ${fmt(a)} ≤ x ≤ ${fmt(b)}`;
+
+    /*
+      Só atualizamos os dados das duas traces da fatia.
+      A câmera 3D não é reconstruída, portanto o ponto de vista escolhido
+      pelo professor fica exatamente onde está enquanto o slider se move.
+    */
+    Plotly.restyle(plot, {
+      x: [sl.curtain.x],
+      y: [sl.curtain.y],
+      z: [sl.curtain.z]
+    }, [SLICE_CURTAIN]);
+
+    Plotly.restyle(plot, {
+      x: [sl.topLine.x],
+      y: [sl.topLine.y],
+      z: [sl.topLine.z]
+    }, [SLICE_LINE]);
+  }
+
+  function renderExample() {
+    const ex = examples[exampleSelect.value];
+    const mesh = makeRegionMesh(ex);
+    const boundary = makeBoundary(ex);
+    const value = Number(slider.value);
     const sl = makeSlice(ex, value);
 
+    const floor = {
+      type: "mesh3d",
+      x: mesh.x,
+      y: mesh.y,
+      z: mesh.x.map(() => 0),
+      i: mesh.i,
+      j: mesh.j,
+      k: mesh.k,
+      color: "#9ca3af",
+      opacity: 0.22,
+      flatshading: false,
+      hoverinfo: "skip",
+      name: "Região R"
+    };
+
     const surface = {
-      type: "surface",
-      x: mesh.xs,
-      y: mesh.ys,
+      type: "mesh3d",
+      x: mesh.x,
+      y: mesh.y,
       z: mesh.z,
-      showscale: false,
-      opacity: 0.82,
+      i: mesh.i,
+      j: mesh.j,
+      k: mesh.k,
+      intensity: mesh.z,
+      intensitymode: "vertex",
       colorscale: "Viridis",
-      connectgaps: false,
+      showscale: false,
+      opacity: 0.84,
+      flatshading: false,
       hovertemplate: "x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
       name: "z=f(x,y)"
     };
 
-    const floor = {
-      type: "surface",
-      x: mesh.xs,
-      y: mesh.ys,
-      z: mesh.floor,
-      showscale: false,
-      opacity: 0.25,
-      colorscale: [[0,"#9ca3af"],[1,"#9ca3af"]],
-      connectgaps: false,
+    const outline = {
+      type: "scatter3d",
+      mode: "lines",
+      x: boundary.x,
+      y: boundary.y,
+      z: boundary.z,
+      line: {color:"#6b7280", width:5},
       hoverinfo: "skip",
-      name: "Região R"
+      name: "Borda de R"
+    };
+
+    const curtain = {
+      type: "surface",
+      x: sl.curtain.x,
+      y: sl.curtain.y,
+      z: sl.curtain.z,
+      colorscale: [[0,"#ef8354"],[1,"#ef8354"]],
+      showscale: false,
+      opacity: 0.62,
+      hoverinfo: "skip",
+      name: "Fatia"
+    };
+
+    const topLine = {
+      type: "scatter3d",
+      mode: "lines",
+      x: sl.topLine.x,
+      y: sl.topLine.y,
+      z: sl.topLine.z,
+      line: {color:"#c2410c", width:7},
+      hovertemplate: "x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+      name: "Topo da fatia"
     };
 
     const [a,b] = sl.interval;
@@ -432,8 +525,9 @@
     const layout = {
       title: {text: ex.title, x: 0.02, xanchor: "left"},
       margin: {l:0, r:0, t:52, b:0},
-      uirevision: exampleSelect.value + "-" + mode,
+      uirevision: "example-" + exampleSelect.value,
       scene: {
+        uirevision: "scene-" + exampleSelect.value,
         xaxis: {title:"x", range:[ex.xMin,ex.xMax]},
         yaxis: {title:"y", range:[ex.yMin,ex.yMax]},
         zaxis: {title:"z = f(x,y)", range:[ex.zMinHint,ex.zMaxHint]},
@@ -457,27 +551,27 @@
       scrollZoom: true
     };
 
-    Plotly.react(plot, [floor, surface, sl.curtain, sl.topLine], layout, config);
+    Plotly.react(plot, [floor, surface, outline, curtain, topLine], layout, config);
   }
 
   function changeMode(next) {
     mode = next;
-    updateControls();
-    render();
+    updateControls(true);
+    updateSlice();
   }
 
   fixX.addEventListener("click", () => changeMode("x"));
   fixY.addEventListener("click", () => changeMode("y"));
 
   exampleSelect.addEventListener("change", () => {
-    updateControls();
-    render();
+    updateControls(true);
+    renderExample();
   });
 
-  slider.addEventListener("input", render);
+  slider.addEventListener("input", updateSlice);
 
-  updateControls();
-  render();
+  updateControls(true);
+  renderExample();
 })();
 </script>
 </body>
