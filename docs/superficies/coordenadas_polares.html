@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coordenadas polares e superfícies</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      color: #1f2937;
+      background: #f7f7f8;
+    }
+    body { margin: 0; }
+    main { max-width: 1180px; margin: 0 auto; padding: 18px 14px 34px; }
+    .top {
+      display: flex; gap: 14px; justify-content: space-between;
+      align-items: baseline; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    h1 { font-size: clamp(1.5rem, 3vw, 2.25rem); margin: 0; }
+    p { color: #4b5563; }
+    a { color: #111827; font-weight: 650; }
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(250px, 1.35fr) minmax(260px, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      min-width: 0;
+    }
+    label { display: block; font-weight: 650; margin-bottom: 6px; }
+    select, input[type="range"] { width: 100%; }
+    select {
+      min-height: 42px; border: 1px solid #d1d5db; border-radius: 10px;
+      padding: 8px 10px; background: white; font-size: 1rem;
+    }
+    .checks { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .checks label { display: flex; gap: 7px; align-items: center; font-weight: 500; margin: 0; }
+    .sliderRow + .sliderRow { margin-top: 12px; }
+    .readout {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+    }
+    .readout > div {
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 10px 12px; min-width: 0;
+    }
+    .readout strong {
+      display: block; font-size: .82rem; color: #6b7280; margin-bottom: 3px;
+    }
+    #plot {
+      background: white; border: 1px solid #e5e7eb; border-radius: 18px;
+      overflow: hidden; min-height: 680px;
+    }
+    .formula {
+      margin-top: 14px; background: white; border: 1px solid #e5e7eb;
+      border-radius: 14px; padding: 13px 15px;
+    }
+    .formula strong { display: block; margin-bottom: 4px; }
+    .formula code {
+      display: inline-block; background: #eef2f7; padding: .18em .45em;
+      border-radius: .4em; white-space: normal; overflow-wrap: anywhere;
+    }
+    .note {
+      margin-top: 10px; background: #eef2ff; border-left: 4px solid #6366f1;
+      border-radius: 10px; padding: 11px 13px; color: #374151;
+    }
+    .legend {
+      display: flex; gap: 14px; flex-wrap: wrap; font-size: .92rem;
+      color: #4b5563; margin: 10px 2px 0;
+    }
+    .dot {
+      display: inline-block; width: 10px; height: 10px; border-radius: 999px;
+      margin-right: 5px; vertical-align: baseline;
+    }
+    .dot.surface { background: #5b8ff9; }
+    .dot.slice { background: #ef8354; }
+    .dot.floor { background: #9ca3af; }
+    .dot.grid { background: #374151; }
+    .hidden { display: none; }
+    @media (max-width: 760px) {
+      .controls, .readout { grid-template-columns: 1fr; }
+      #plot { min-height: 570px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>Coordenadas polares e superfícies</h1>
+    <a href="../index.html">Voltar</a>
+  </div>
+
+  <p>
+    Visualize a transformação <strong>x = r cos θ</strong>, <strong>y = r sen θ</strong>,
+    as regiões descritas por limites em <strong>r</strong> e <strong>θ</strong> e superfícies
+    escritas naturalmente nessas coordenadas. Arraste a figura para girar.
+  </p>
+
+  <section class="controls">
+    <div class="panel">
+      <label for="example">Exemplo</label>
+      <select id="example">
+        <option value="coords">1. O ponto (r, θ) no plano xy</option>
+        <option value="sector">2. Um retângulo em (r, θ) vira um setor anular</option>
+        <option value="ex12">3. Lista 4, Ex. 12 — quarto de disco e integrando radial</option>
+        <option value="ex13">4. Lista 4, Ex. 13 — paraboloide z = 9 − r²</option>
+        <option value="ex14">5. Lista 4, Ex. 14 — esfera z = √(9 − r²)</option>
+        <option value="ex17">6. Lista 4, Ex. 17 — cone sobre r ≤ 2 cos θ</option>
+        <option value="ex20">7. Lista 4, Ex. 20 — cardioide e z = sen θ</option>
+        <option value="ex21">8. Lista 4, Ex. 21 — região entre duas voltas de r = θ</option>
+      </select>
+
+      <div class="checks">
+        <label><input id="showFloor" type="checkbox" checked> projeção no plano xy</label>
+        <label><input id="showGrid" type="checkbox" checked> malha polar</label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="sliderRow">
+        <label id="thetaLabel" for="thetaSlider">θ</label>
+        <input id="thetaSlider" type="range">
+      </div>
+      <div id="rControl" class="sliderRow">
+        <label id="rLabel" for="rSlider">r</label>
+        <input id="rSlider" type="range">
+      </div>
+
+      <div class="readout">
+        <div>
+          <strong>Coordenadas / fatia atual</strong>
+          <span id="positionText"></span>
+        </div>
+        <div>
+          <strong>Limites polares</strong>
+          <span id="limitsText"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="plot" role="img" aria-label="Visualização interativa de coordenadas polares e superfícies"></div>
+
+  <div class="legend">
+    <span><span class="dot surface"></span>superfície</span>
+    <span><span class="dot slice"></span>θ constante / ponto destacado</span>
+    <span><span class="dot floor"></span>região no plano xy</span>
+    <span><span class="dot grid"></span>malha polar</span>
+  </div>
+
+  <div class="formula">
+    <strong id="formulaTitle"></strong>
+    <code id="formulaText"></code>
+  </div>
+  <div class="note" id="note"></div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const plot = $("plot");
+  const exampleSelect = $("example");
+  const thetaSlider = $("thetaSlider");
+  const rSlider = $("rSlider");
+  const rControl = $("rControl");
+  const thetaLabel = $("thetaLabel");
+  const rLabel = $("rLabel");
+  const positionText = $("positionText");
+  const limitsText = $("limitsText");
+  const formulaTitle = $("formulaTitle");
+  const formulaText = $("formulaText");
+  const note = $("note");
+  const showFloor = $("showFloor");
+  const showGrid = $("showGrid");
+
+  const PI = Math.PI;
+
+  const examples = {
+    coords: {
+      kind: "coords",
+      title: "Coordenadas polares: de (r, θ) para (x,y)",
+      thetaMin: 0, thetaMax: 2*PI,
+      rMin: () => 0, rMax: () => 3,
+      z: () => 0,
+      theta0: PI/4, r0: 2,
+      limits: "r ≥ 0, 0 ≤ θ < 2π",
+      formulaTitle: "Transformação polar",
+      formula: "x = r cos θ,   y = r sen θ,   x² + y² = r²",
+      note: "Mova r e θ. O raio r mede a distância à origem; θ mede o ângulo a partir do eixo x positivo. O mesmo ponto cartesiano pode admitir representações polares equivalentes quando permitimos somar múltiplos de 2π a θ."
+    },
+    sector: {
+      kind: "surface",
+      title: "Retângulo em (r, θ) → setor anular no plano xy",
+      thetaMin: PI/6, thetaMax: 2*PI/3,
+      rMin: () => 1,
+      rMax: () => 2.5,
+      z: () => 0.35,
+      theta0: PI/3,
+      limits: "1 ≤ r ≤ 2,5,   π/6 ≤ θ ≤ 2π/3",
+      formulaTitle: "Leitura geométrica",
+      formula: "[1, 2,5] × [π/6, 2π/3] no plano (r,θ) vira um setor anular no plano (x,y)",
+      note: "Este é o exemplo-base para ler integrais polares: limites constantes em r e θ produzem duas circunferências e duas semirretas. A geometria deixa de parecer um retângulo quando voltamos ao plano xy."
+    },
+    ex12: {
+      kind: "surface",
+      title: "Exercício 12 — y√(x²+y²) no quarto de disco",
+      thetaMin: 0, thetaMax: PI/2,
+      rMin: () => 0,
+      rMax: () => 2,
+      z: (r,t) => r*r*Math.sin(t),
+      theta0: PI/4,
+      limits: "0 ≤ r ≤ 2,   0 ≤ θ ≤ π/2",
+      formulaTitle: "Integrando e Jacobiano",
+      formula: "y√(x²+y²) = r² sen θ;  dA = r dr dθ;  logo o integrando efetivo é r³ sen θ",
+      note: "A base é o quarto de disco x²+y² ≤ 4 no primeiro quadrante. A superfície mostra apenas f(x,y); o fator extra r vem da deformação de área da transformação polar."
+    },
+    ex13: {
+      kind: "surface",
+      title: "Exercício 13 — paraboloide z = 9 − r² sobre r ≤ 2",
+      thetaMin: 0, thetaMax: 2*PI,
+      rMin: () => 0,
+      rMax: () => 2,
+      z: (r) => 9-r*r,
+      theta0: PI/3,
+      limits: "0 ≤ r ≤ 2,   0 ≤ θ ≤ 2π",
+      formulaTitle: "Volume em polares",
+      formula: "V = ∫₀²π ∫₀² (9 − r²) r dr dθ",
+      note: "Aqui a simetria radial fica explícita: x²+y² vira simplesmente r². O cilindro lateral x²+y² = 4 vira o limite constante r = 2."
+    },
+    ex14: {
+      kind: "surface",
+      title: "Exercício 14 — esfera z = √(9 − r²) sobre r ≤ 1",
+      thetaMin: 0, thetaMax: 2*PI,
+      rMin: () => 0,
+      rMax: () => 1,
+      z: (r) => Math.sqrt(Math.max(0,9-r*r)),
+      theta0: PI/3,
+      limits: "0 ≤ r ≤ 1,   0 ≤ θ ≤ 2π",
+      formulaTitle: "Superfície esférica",
+      formula: "x²+y²+z²=9  ⇒  z=√(9−r²);   V = ∫₀²π ∫₀¹ √(9−r²) r dr dθ",
+      note: "O domínio é o disco r ≤ 1 e a altura vem da esfera de raio 3. Girar a figura ajuda a separar visualmente o cilindro que determina a base da esfera que determina o teto."
+    },
+    ex17: {
+      kind: "surface",
+      title: "Exercício 17 — cone z = r sobre o círculo deslocado",
+      thetaMin: -PI/2, thetaMax: PI/2,
+      rMin: () => 0,
+      rMax: (t) => Math.max(0,2*Math.cos(t)),
+      z: (r) => r,
+      theta0: 0,
+      limits: "0 ≤ r ≤ 2 cos θ,   −π/2 ≤ θ ≤ π/2",
+      formulaTitle: "Círculo deslocado em coordenadas polares",
+      formula: "(x−1)²+y² ≤ 1  ⇒  r ≤ 2 cos θ;   z=√(x²+y²)=r",
+      note: "Este é um dos melhores exemplos para mostrar o poder das polares: tanto a superfície quanto a borda lateral ficam simples. O círculo deslocado deixa de exigir completar quadrados durante a integração."
+    },
+    ex20: {
+      kind: "surface",
+      title: "Exercício 20 — setor dentro da cardioide r = 2 + 2 cos θ",
+      thetaMin: PI/4, thetaMax: PI/2,
+      rMin: () => 0,
+      rMax: (t) => 2+2*Math.cos(t),
+      z: (r,t) => Math.sin(t),
+      theta0: PI/3,
+      limits: "0 ≤ r ≤ 2+2 cos θ,   π/4 ≤ θ ≤ π/2",
+      formulaTitle: "Integrando do exercício",
+      formula: "y/√(x²+y²) = sen θ;  com dA = r dr dθ, a densidade passa a r sen θ",
+      note: "A reta y=x vira θ=π/4 e o eixo y vira θ=π/2. A cardioide fornece diretamente o limite radial. A superfície z=sen θ é constante ao longo de cada raio."
+    },
+    ex21: {
+      kind: "surface",
+      title: "Exercício 21 — área entre duas voltas da espiral r = θ",
+      thetaMin: 2*PI, thetaMax: 4*PI,
+      rMin: (t) => t,
+      rMax: (t) => t+2*PI,
+      z: () => 0.45,
+      theta0: 3*PI,
+      limits: "2π ≤ θ ≤ 4π,   θ ≤ r ≤ θ+2π",
+      formulaTitle: "Área em polares",
+      formula: "A = ∫₂π⁴π ∫_θ^(θ+2π) r dr dθ",
+      note: "A região está entre duas voltas consecutivas da espiral r=θ. Aqui o limite inferior e o superior dependem de θ, algo que fica muito mais natural em polares do que em coordenadas cartesianas."
+    }
+  };
+
+  function linspace(a,b,n) {
+    const out = [];
+    for (let i=0; i<n; i++) out.push(a + (b-a)*i/(n-1));
+    return out;
+  }
+
+  function fmt(v) {
+    if (Math.abs(v) < 1e-10) return "0";
+    const q = v/PI;
+    const common = [
+      [2,"2π"], [1.5,"3π/2"], [4/3,"4π/3"], [1,"π"], [2/3,"2π/3"],
+      [0.5,"π/2"], [1/3,"π/3"], [0.25,"π/4"], [1/6,"π/6"],
+      [-0.5,"−π/2"], [-1,"−π"], [3,"3π"], [4,"4π"]
+    ];
+    for (const [a,label] of common) if (Math.abs(q-a) < 0.008) return label;
+    return (Math.round(v*100)/100).toString();
+  }
+
+  function cloneCamera() {
+    const c = plot && plot._fullLayout && plot._fullLayout.scene
+      ? plot._fullLayout.scene.camera : null;
+    return c ? JSON.parse(JSON.stringify(c)) : null;
+  }
+
+  function restoreCamera(c) {
+    if (!c) return Promise.resolve();
+    return Plotly.relayout(plot, {"scene.camera": c});
+  }
+
+  function surfaceGrid(ex, nt=120, ns=55) {
+    const ts = linspace(ex.thetaMin, ex.thetaMax, nt);
+    const ss = linspace(0,1,ns);
+    const X=[], Y=[], Z=[], Z0=[];
+    for (const t of ts) {
+      const r0 = ex.rMin(t), r1 = ex.rMax(t);
+      const xr=[], yr=[], zr=[], z0r=[];
+      for (const s of ss) {
+        const r = r0 + s*(r1-r0);
+        xr.push(r*Math.cos(t));
+        yr.push(r*Math.sin(t));
+        zr.push(ex.z(r,t));
+        z0r.push(0);
+      }
+      X.push(xr); Y.push(yr); Z.push(zr); Z0.push(z0r);
+    }
+    return {ts,ss,X,Y,Z,Z0};
+  }
+
+  function polarGridTraces(ex) {
+    const traces = [];
+    const tCount = 10;
+    const rCount = 6;
+
+    for (let m=0; m<tCount; m++) {
+      const t = ex.thetaMin + (ex.thetaMax-ex.thetaMin)*m/(tCount-1);
+      const rs = linspace(ex.rMin(t), ex.rMax(t), 70);
+      traces.push({
+        type:"scatter3d", mode:"lines",
+        x:rs.map(r=>r*Math.cos(t)),
+        y:rs.map(r=>r*Math.sin(t)),
+        z:rs.map(r=>ex.z(r,t)+0.012),
+        line:{color:"#374151",width:2},
+        hoverinfo:"skip", showlegend:false
+      });
+    }
+
+    for (let m=0; m<rCount; m++) {
+      const s = m/(rCount-1);
+      const ts = linspace(ex.thetaMin,ex.thetaMax,150);
+      const rs = ts.map(t=>ex.rMin(t)+s*(ex.rMax(t)-ex.rMin(t)));
+      traces.push({
+        type:"scatter3d", mode:"lines",
+        x:ts.map((t,i)=>rs[i]*Math.cos(t)),
+        y:ts.map((t,i)=>rs[i]*Math.sin(t)),
+        z:ts.map((t,i)=>ex.z(rs[i],t)+0.012),
+        line:{color:"#374151",width:2},
+        hoverinfo:"skip", showlegend:false
+      });
+    }
+    return traces;
+  }
+
+  function thetaSlice(ex,t) {
+    const rs = linspace(ex.rMin(t), ex.rMax(t), 120);
+    const xs = rs.map(r=>r*Math.cos(t));
+    const ys = rs.map(r=>r*Math.sin(t));
+    const zs = rs.map(r=>ex.z(r,t));
+    return {
+      type:"scatter3d", mode:"lines+markers",
+      x:xs,y:ys,z:zs,
+      marker:{size:2,color:"#c2410c"},
+      line:{color:"#c2410c",width:8},
+      hovertemplate:"r ao longo da fatia<extra></extra>",
+      showlegend:false
+    };
+  }
+
+  function bounds(ex) {
+    const ts = linspace(ex.thetaMin,ex.thetaMax,240);
+    let maxR = 0;
+    for (const t of ts) maxR = Math.max(maxR,Math.abs(ex.rMin(t)),Math.abs(ex.rMax(t)));
+    return Math.max(1,maxR);
+  }
+
+  function coordsTraces(ex) {
+    const r = Number(rSlider.value);
+    const t = Number(thetaSlider.value);
+    const x = r*Math.cos(t), y=r*Math.sin(t);
+
+    const circles = [0.5,1,1.5,2,2.5,3].map(rr => {
+      const tt=linspace(0,2*PI,100);
+      return {
+        type:"scatter3d",mode:"lines",
+        x:tt.map(a=>rr*Math.cos(a)), y:tt.map(a=>rr*Math.sin(a)), z:tt.map(()=>0),
+        line:{color:"#d1d5db",width:2}, hoverinfo:"skip",showlegend:false
+      };
+    });
+
+    const rays = [];
+    for(let k=0;k<12;k++){
+      const a=2*PI*k/12;
+      rays.push({
+        type:"scatter3d",mode:"lines",
+        x:[0,3*Math.cos(a)],y:[0,3*Math.sin(a)],z:[0,0],
+        line:{color:"#e5e7eb",width:2},hoverinfo:"skip",showlegend:false
+      });
+    }
+
+    const radial = {
+      type:"scatter3d",mode:"lines",
+      x:[0,x],y:[0,y],z:[0,0],
+      line:{color:"#ef8354",width:8},hoverinfo:"skip",showlegend:false
+    };
+
+    const arcT = linspace(0,t,80);
+    const arcR = Math.min(0.75, Math.max(0.35,r*0.35));
+    const arc = {
+      type:"scatter3d",mode:"lines",
+      x:arcT.map(a=>arcR*Math.cos(a)),
+      y:arcT.map(a=>arcR*Math.sin(a)),
+      z:arcT.map(()=>0.015),
+      line:{color:"#7c3aed",width:7},hoverinfo:"skip",showlegend:false
+    };
+
+    const point = {
+      type:"scatter3d",mode:"markers+text",
+      x:[x],y:[y],z:[0],
+      marker:{size:7,color:"#c2410c"},
+      text:["P"],textposition:"top center",
+      hovertemplate:`x=${x.toFixed(3)}<br>y=${y.toFixed(3)}<extra></extra>`,
+      showlegend:false
+    };
+
+    return [...circles,...rays,radial,arc,point];
+  }
+
+  function renderCoords(preserveCamera=false) {
+    const ex=examples.coords;
+    const saved=preserveCamera?cloneCamera():null;
+    const r=Number(rSlider.value), t=Number(thetaSlider.value);
+    const x=r*Math.cos(t), y=r*Math.sin(t);
+    positionText.textContent=`r = ${r.toFixed(2)}, θ = ${fmt(t)}  →  (x,y) ≈ (${x.toFixed(2)}, ${y.toFixed(2)})`;
+    limitsText.textContent=ex.limits;
+    formulaTitle.textContent=ex.formulaTitle;
+    formulaText.textContent=ex.formula;
+    note.textContent=ex.note;
+
+    const traces=coordsTraces(ex);
+    const layout={
+      title:{text:ex.title,x:0.02,xanchor:"left"},
+      margin:{l:0,r:0,t:52,b:0},
+      uirevision:"polar-camera",
+      scene:{
+        uirevision:"polar-camera",
+        xaxis:{title:"x",range:[-3.2,3.2]},
+        yaxis:{title:"y",range:[-3.2,3.2]},
+        zaxis:{title:"",range:[-0.2,0.7],showticklabels:false},
+        aspectmode:"manual",aspectratio:{x:1,y:1,z:0.25},
+        camera:{eye:{x:1.35,y:1.35,z:1.15}},
+        bgcolor:"#fff"
+      },
+      showlegend:false,paper_bgcolor:"#fff",plot_bgcolor:"#fff"
+    };
+    Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,scrollZoom:true})
+      .then(()=>restoreCamera(saved));
+  }
+
+  function renderSurface(preserveCamera=false) {
+    const ex=examples[exampleSelect.value];
+    const saved=preserveCamera?cloneCamera():null;
+    const g=surfaceGrid(ex);
+    const t=Number(thetaSlider.value);
+    const limitR0=ex.rMin(t), limitR1=ex.rMax(t);
+
+    const surface={
+      type:"surface",x:g.X,y:g.Y,z:g.Z,
+      colorscale:"Viridis",showscale:false,opacity:0.86,
+      hovertemplate:"x=%{x:.3g}<br>y=%{y:.3g}<br>z=%{z:.3g}<extra></extra>",
+      name:"superfície"
+    };
+    const floor={
+      type:"surface",x:g.X,y:g.Y,z:g.Z0,
+      colorscale:[[0,"#9ca3af"],[1,"#9ca3af"]],showscale:false,
+      opacity:showFloor.checked?0.22:0,
+      hoverinfo:"skip",name:"região"
+    };
+
+    const traces=[floor,surface];
+    if(showGrid.checked) traces.push(...polarGridTraces(ex));
+    traces.push(thetaSlice(ex,t));
+
+    const B=bounds(ex);
+    positionText.textContent=`θ = ${fmt(t)}; nesta direção, ${Math.round(limitR0*100)/100} ≤ r ≤ ${Math.round(limitR1*100)/100}`;
+    limitsText.textContent=ex.limits;
+    formulaTitle.textContent=ex.formulaTitle;
+    formulaText.textContent=ex.formula;
+    note.textContent=ex.note;
+
+    let zMin=Infinity,zMax=-Infinity;
+    for(const row of g.Z) for(const v of row){ zMin=Math.min(zMin,v); zMax=Math.max(zMax,v); }
+    if(Math.abs(zMax-zMin)<0.25){ zMin=Math.min(0,zMin-0.2); zMax=zMax+0.7; }
+    else { const pad=0.08*(zMax-zMin); zMin=Math.min(0,zMin-pad); zMax+=pad; }
+
+    const layout={
+      title:{text:ex.title,x:0.02,xanchor:"left"},
+      margin:{l:0,r:0,t:52,b:0},
+      uirevision:"polar-camera",
+      scene:{
+        uirevision:"polar-camera",
+        xaxis:{title:"x",range:[-1.08*B,1.08*B]},
+        yaxis:{title:"y",range:[-1.08*B,1.08*B]},
+        zaxis:{title:"z",range:[zMin,zMax]},
+        aspectmode:"manual",
+        aspectratio:{x:1,y:1,z:0.72},
+        camera:{eye:{x:1.45,y:1.45,z:1.15}},
+        bgcolor:"#fff"
+      },
+      showlegend:false,paper_bgcolor:"#fff",plot_bgcolor:"#fff"
+    };
+    Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,scrollZoom:true})
+      .then(()=>restoreCamera(saved));
+  }
+
+  function configure(reset=true) {
+    const ex=examples[exampleSelect.value];
+    thetaSlider.min=ex.thetaMin;
+    thetaSlider.max=ex.thetaMax;
+    thetaSlider.step=(ex.thetaMax-ex.thetaMin)/360;
+    if(reset) thetaSlider.value=ex.theta0 ?? (ex.thetaMin+ex.thetaMax)/2;
+
+    const isCoords=ex.kind==="coords";
+    rControl.classList.toggle("hidden",!isCoords);
+    showFloor.disabled=isCoords;
+    showGrid.disabled=isCoords;
+    if(isCoords){
+      rSlider.min=0;rSlider.max=3;rSlider.step=0.01;
+      if(reset) rSlider.value=ex.r0;
+      thetaLabel.textContent="Ângulo θ";
+      rLabel.textContent="Raio r";
+    }else{
+      thetaLabel.textContent="Fatia radial: θ = constante";
+    }
+  }
+
+  function render(preserveCamera=false) {
+    const ex=examples[exampleSelect.value];
+    if(ex.kind==="coords") renderCoords(preserveCamera);
+    else renderSurface(preserveCamera);
+  }
+
+  exampleSelect.addEventListener("change",()=>{
+    configure(true);
+    render(false);
+  });
+
+  thetaSlider.addEventListener("input",()=>render(true));
+  rSlider.addEventListener("input",()=>render(true));
+  showFloor.addEventListener("change",()=>render(true));
+  showGrid.addEventListener("change",()=>render(true));
+
+  configure(true);
+  render(false);
+})();
+</script>
+</body>
+</html>
