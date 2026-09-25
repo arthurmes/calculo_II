@@ -5,6 +5,7 @@ Este repositório é um modelo mínimo para publicar superfícies 3D interativas
 - Python
 - Plotly
 - HTML
+- JavaScript (para controles interativos)
 - GitHub Pages
 
 ## Estrutura
@@ -60,3 +61,15 @@ Depois de alguns instantes, o GitHub mostrará o link público do site.
 
 As figuras foram geradas com malhas leves, pensadas para funcionar bem em celulares.
 Se uma superfície ficar lenta, reduza o número de pontos em `np.linspace`.
+
+## Fatias em integrais duplas
+
+A página `docs/superficies/fatias_integrais_duplas.html` reúne exemplos da Lista 4 com:
+
+- superfície `z = f(x,y)` sobre a região de integração;
+- região projetada no plano `xy`;
+- fatia móvel com `x` fixo ou `y` fixo;
+- limites da fatia e a integral iterada correspondente;
+- exemplos dos exercícios 3, 5(c), 6 e 7.
+
+Essa página usa Plotly diretamente no navegador para permitir mover a fatia com um controle deslizante.
