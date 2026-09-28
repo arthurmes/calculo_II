@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Graficador de equações polares</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@13.2.0/lib/browser/math.js"></script>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      color: #1f2937;
+      background: #f7f7f8;
+    }
+    body { margin: 0; }
+    main { max-width: 1080px; margin: 0 auto; padding: 18px 14px 34px; }
+    .top {
+      display: flex; gap: 14px; justify-content: space-between;
+      align-items: baseline; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    h1 { font-size: clamp(1.5rem, 3vw, 2.25rem); margin: 0; }
+    p { color: #4b5563; }
+    a { color: #111827; font-weight: 650; }
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.45fr) minmax(260px, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      min-width: 0;
+    }
+    label { display: block; font-weight: 650; margin-bottom: 6px; }
+    input, select, button { font: inherit; }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 42px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: white;
+      font-size: 1rem;
+    }
+    .equation-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .equation-prefix {
+      font-size: 1.12rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .bounds {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    button {
+      min-height: 42px;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      padding: 8px 15px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .primary { background: #111827; color: white; }
+    .secondary { background: white; color: #111827; }
+    .help {
+      margin-top: 10px;
+      font-size: .92rem;
+      color: #6b7280;
+    }
+    .examples {
+      display: grid;
+      gap: 8px;
+    }
+    .status {
+      margin-top: 12px;
+      min-height: 24px;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+    }
+    .status.error {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
+    }
+    #plot {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 680px;
+    }
+    .readout {
+      margin-top: 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: grid;
+      gap: 5px;
+    }
+    .readout code {
+      background: #eef2f7;
+      padding: .16em .42em;
+      border-radius: .35em;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 760px) {
+      .controls, .bounds { grid-template-columns: 1fr; }
+      #plot { min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>Graficador de equações polares</h1>
+    <a href="../index.html">Voltar</a>
+  </div>
+
+  <p>
+    Digite uma equação na forma <strong>r = f(t)</strong>, usando <strong>t</strong> no lugar de θ.
+    O gráfico é construído por <strong>x = r cos(t)</strong> e <strong>y = r sen(t)</strong>,
+    de modo que valores negativos de r também são representados corretamente.
+  </p>
+
+  <section class="controls">
+    <div class="panel">
+      <label for="expr">Equação polar</label>
+      <div class="equation-row">
+        <span class="equation-prefix">r =</span>
+        <input id="expr" type="text" value="2 + 2*cos(t)" spellcheck="false" autocomplete="off">
+      </div>
+
+      <div class="bounds">
+        <div>
+          <label for="tmin">t mínimo</label>
+          <input id="tmin" type="text" value="0" spellcheck="false">
+        </div>
+        <div>
+          <label for="tmax">t máximo</label>
+          <input id="tmax" type="text" value="2*pi" spellcheck="false">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="draw" type="button" class="primary">Traçar</button>
+        <button id="resetView" type="button" class="secondary">Centralizar</button>
+      </div>
+
+      <div class="help">
+        Aceita, por exemplo: <code>sin(t)</code>, <code>cos(t)</code>, <code>sqrt(...)</code>,
+        <code>abs(...)</code>, <code>exp(...)</code>, <code>log(...)</code>, <code>pi</code> e potências com <code>^</code>.
+        Os ângulos são em radianos.
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+    </div>
+
+    <div class="panel">
+      <label for="examples">Exemplos prontos</label>
+      <div class="examples">
+        <select id="examples">
+          <option value="">Escolha um exemplo…</option>
+          <option value="cardioide">Cardioide: r = 2 + 2 cos(t)</option>
+          <option value="rose3">Rosa de 3 pétalas: r = 2 cos(3t)</option>
+          <option value="rose4">Rosa de 4 pétalas: r = 2 cos(2t)</option>
+          <option value="limacon">Limaçon: r = 1 + 2 cos(t)</option>
+          <option value="circle">Círculo deslocado: r = 2 cos(t)</option>
+          <option value="spiral">Espiral de Arquimedes: r = t</option>
+          <option value="lemniscate">Lemniscata: r² = 4 cos(2t)</option>
+        </select>
+      </div>
+
+      <div class="readout">
+        <strong>Interpretação cartesiana usada</strong>
+        <span><code>x(t) = r(t) cos(t)</code></span>
+        <span><code>y(t) = r(t) sin(t)</code></span>
+      </div>
+    </div>
+  </section>
+
+  <div id="plot" role="img" aria-label="Gráfico de uma equação polar"></div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const expr = $("expr");
+  const tmin = $("tmin");
+  const tmax = $("tmax");
+  const draw = $("draw");
+  const resetView = $("resetView");
+  const examples = $("examples");
+  const status = $("status");
+  const plot = $("plot");
+
+  const EXAMPLES = {
+    cardioide: { expr: "2 + 2*cos(t)", tmin: "0", tmax: "2*pi" },
+    rose3: { expr: "2*cos(3*t)", tmin: "0", tmax: "2*pi" },
+    rose4: { expr: "2*cos(2*t)", tmin: "0", tmax: "2*pi" },
+    limacon: { expr: "1 + 2*cos(t)", tmin: "0", tmax: "2*pi" },
+    circle: { expr: "2*cos(t)", tmin: "0", tmax: "2*pi" },
+    spiral: { expr: "t", tmin: "0", tmax: "6*pi" },
+    lemniscate: { expr: "sqrt(4*cos(2*t))", tmin: "-pi/4", tmax: "pi/4", mirror: true }
+  };
+
+  let lastRange = null;
+
+  function setStatus(message, isError=false) {
+    status.textContent = message;
+    status.classList.toggle("error", isError);
+  }
+
+  function evalScalar(source) {
+    const value = math.evaluate(source, { pi: Math.PI, e: Math.E });
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new Error("o limite precisa resultar em um número real finito");
+    }
+    return value;
+  }
+
+  function compileExpression(source) {
+    const node = math.parse(source);
+    return node.compile();
+  }
+
+  function realNumber(value) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (value && typeof value.re === "number" && Math.abs(value.im || 0) < 1e-10 && Number.isFinite(value.re)) {
+      return value.re;
+    }
+    return NaN;
+  }
+
+  function sampleCurve(source, a, b, n=2400) {
+    const compiled = compileExpression(source);
+    const x = [];
+    const y = [];
+    const theta = [];
+    const radius = [];
+    let finiteCount = 0;
+
+    for (let i=0; i<n; i++) {
+      const t = a + (b-a)*i/(n-1);
+      let r = NaN;
+      try {
+        r = realNumber(compiled.evaluate({ t: t, pi: Math.PI, e: Math.E }));
+      } catch (_) {
+        r = NaN;
+      }
+
+      if (Number.isFinite(r) && Math.abs(r) < 1e6) {
+        x.push(r*Math.cos(t));
+        y.push(r*Math.sin(t));
+        theta.push(t);
+        radius.push(r);
+        finiteCount++;
+      } else {
+        x.push(null);
+        y.push(null);
+        theta.push(t);
+        radius.push(null);
+      }
+    }
+
+    if (finiteCount < 2) {
+      throw new Error("a expressão não produziu pontos reais suficientes nesse intervalo");
+    }
+
+    return { x, y, theta, radius };
+  }
+
+  function extent(values) {
+    let m = 0;
+    for (const v of values) {
+      if (typeof v === "number" && Number.isFinite(v)) m = Math.max(m, Math.abs(v));
+    }
+    return Math.max(1, m);
+  }
+
+  function polarGrid(radius) {
+    const shapes = [];
+    const annotations = [];
+    const R = Math.max(1, radius);
+    const rawStep = R/5;
+    const p10 = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const candidates = [1,2,5,10].map(k => k*p10);
+    let step = candidates[0];
+    for (const c of candidates) if (Math.abs(c-rawStep) < Math.abs(step-rawStep)) step = c;
+
+    const maxCircle = Math.ceil(R/step)*step;
+    for (let rr=step; rr<=maxCircle+1e-12; rr+=step) {
+      shapes.push({
+        type:"circle",
+        xref:"x", yref:"y",
+        x0:-rr, y0:-rr, x1:rr, y1:rr,
+        line:{color:"#d1d5db",width:1},
+        layer:"below"
+      });
+      annotations.push({
+        x:rr, y:0, xref:"x", yref:"y",
+        text:String(Math.round(rr*100)/100),
+        showarrow:false, xanchor:"left", yanchor:"bottom",
+        font:{size:10,color:"#9ca3af"}
+      });
+    }
+
+    for (let k=0;k<12;k++) {
+      const a=2*Math.PI*k/12;
+      shapes.push({
+        type:"line",
+        xref:"x", yref:"y",
+        x0:-maxCircle*Math.cos(a), y0:-maxCircle*Math.sin(a),
+        x1:maxCircle*Math.cos(a), y1:maxCircle*Math.sin(a),
+        line:{color:"#e5e7eb",width:1},
+        layer:"below"
+      });
+    }
+
+    return { shapes, annotations, maxCircle };
+  }
+
+  function plotCurve(preserveView=false) {
+    try {
+      const a = evalScalar(tmin.value.trim());
+      const b = evalScalar(tmax.value.trim());
+      if (!(b > a)) throw new Error("t máximo deve ser maior que t mínimo");
+
+      const source = expr.value.trim();
+      if (!source) throw new Error("digite uma expressão para r");
+
+      const currentX = plot.layout && plot.layout.xaxis ? plot.layout.xaxis.range : null;
+      const currentY = plot.layout && plot.layout.yaxis ? plot.layout.yaxis.range : null;
+
+      const curve = sampleCurve(source, a, b);
+      const traces = [{
+        type:"scatter",
+        mode:"lines",
+        x:curve.x,
+        y:curve.y,
+        line:{width:4},
+        hovertemplate:"x=%{x:.4g}<br>y=%{y:.4g}<extra></extra>",
+        name:"r = " + source
+      }];
+
+      if (examples.value === "lemniscate" && EXAMPLES.lemniscate.mirror) {
+        const mirrored = {
+          x: curve.x.map(v => v === null ? null : -v),
+          y: curve.y.map(v => v === null ? null : -v)
+        };
+        traces.push({
+          type:"scatter",
+          mode:"lines",
+          x:mirrored.x,
+          y:mirrored.y,
+          line:{width:4},
+          hovertemplate:"x=%{x:.4g}<br>y=%{y:.4g}<extra></extra>",
+          showlegend:false
+        });
+      }
+
+      let radius = Math.max(extent(curve.x), extent(curve.y))*1.12;
+      if (traces.length > 1) radius = Math.max(radius, 2.3);
+      const grid = polarGrid(radius);
+
+      const rangeX = preserveView && currentX ? currentX : [-grid.maxCircle, grid.maxCircle];
+      const rangeY = preserveView && currentY ? currentY : [-grid.maxCircle, grid.maxCircle];
+
+      const layout = {
+        margin:{l:45,r:25,t:45,b:45},
+        title:{text:"r = " + source, x:0.02, xanchor:"left"},
+        xaxis:{
+          title:"x",
+          range:rangeX,
+          zeroline:true,
+          zerolinecolor:"#9ca3af",
+          showgrid:false,
+          scaleanchor:"y",
+          scaleratio:1
+        },
+        yaxis:{
+          title:"y",
+          range:rangeY,
+          zeroline:true,
+          zerolinecolor:"#9ca3af",
+          showgrid:false
+        },
+        shapes:grid.shapes,
+        annotations:grid.annotations,
+        showlegend:false,
+        paper_bgcolor:"#ffffff",
+        plot_bgcolor:"#ffffff",
+        uirevision:"polar-grapher"
+      };
+
+      const config = {
+        responsive:true,
+        displaylogo:false,
+        scrollZoom:true
+      };
+
+      Plotly.react(plot,traces,layout,config);
+      lastRange = [-grid.maxCircle, grid.maxCircle];
+
+      const gaps = curve.radius.filter(v => v === null).length;
+      setStatus(
+        "Traçado em " + (b-a).toFixed(3) + " rad com " + curve.theta.length +
+        " amostras" + (gaps ? "; trechos sem valor real foram omitidos." : ".")
+      );
+    } catch (err) {
+      setStatus("Não consegui traçar: " + err.message, true);
+    }
+  }
+
+  function resetPlotView() {
+    if (!lastRange) return;
+    Plotly.relayout(plot, {
+      "xaxis.range": lastRange,
+      "yaxis.range": lastRange
+    });
+  }
+
+  examples.addEventListener("change", () => {
+    const item = EXAMPLES[examples.value];
+    if (!item) return;
+    expr.value = item.expr;
+    tmin.value = item.tmin;
+    tmax.value = item.tmax;
+    plotCurve(false);
+  });
+
+  draw.addEventListener("click", () => plotCurve(false));
+  resetView.addEventListener("click", resetPlotView);
+
+  [expr,tmin,tmax].forEach(input => {
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") plotCurve(false);
+    });
+  });
+
+  plotCurve(false);
+})();
+</script>
+</body>
+</html>
