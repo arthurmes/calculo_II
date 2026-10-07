@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lista de integrais triplas — visualizações</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.45;color:#1f2937;background:#f7f7f8}
+body{margin:0} main{max-width:1180px;margin:0 auto;padding:18px 14px 34px}
+.top{display:flex;justify-content:space-between;gap:14px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:clamp(1.5rem,3vw,2.25rem);margin:0} p{color:#4b5563}
+a{color:#111827;font-weight:650}.controls{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.5fr);gap:14px;margin:16px 0}
+.panel,.info{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px}
+label{display:block;font-weight:700;margin-bottom:6px} select{width:100%;min-height:44px;border:1px solid #d1d5db;border-radius:10px;padding:8px 10px;background:#fff;font-size:1rem}
+.info strong{display:block;font-size:.82rem;color:#6b7280;margin-top:7px}.math{font-family:"Times New Roman",serif;font-size:1.04rem;color:#111827}
+#plot{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;min-height:680px}
+.note{margin-top:14px;background:#eef2ff;border-left:4px solid #6366f1;border-radius:10px;padding:11px 13px;color:#374151}
+.legend{font-size:.92rem;color:#4b5563;margin:10px 2px 0}
+@media(max-width:760px){.controls{grid-template-columns:1fr}#plot{min-height:570px}}
+</style>
+</head>
+<body><main>
+<div class="top"><h1>Integrais triplas — visualizações da lista</h1><a href="../index.html">Voltar</a></div>
+<p>Escolha um item. A casca translúcida mostra o domínio tridimensional. Os pontos internos ajudam a enxergar o preenchimento; quando o integrando ou a densidade varia, a cor dos pontos representa seu valor.</p>
+<section class="controls">
+<div class="panel"><label for="ex">Exercício</label><select id="ex"></select></div>
+<div class="info"><strong>Domínio / integral</strong><div class="math" id="formula"></div><strong>Resultado</strong><div class="math" id="result"></div></div>
+</section>
+<div id="plot" role="img" aria-label="Visualização 3D interativa do domínio da integral tripla"></div>
+<div class="legend">Gire a figura com o mouse ou com um dedo. A superfície translúcida é a fronteira aproximada do sólido.</div>
+<div class="note" id="note"></div>
+</main>
+<script>
+(() => {
+const pi=Math.PI, eps=1e-9;
+const E=[
+{n:1,t:"Caixa retangular",formula:"0≤x≤1, 0≤y≤2, 0≤z≤3; integrando 4x²y²z⁴",result:"864/5",b:[0,1,0,2,0,3],inside:(x,y,z)=>x>=0&&x<=1&&y>=0&&y<=2&&z>=0&&z<=3,w:(x,y,z)=>4*x*x*y*y*Math.pow(z,4),note:"O domínio é um paralelepípedo retangular; a cor interna indica como o integrando cresce fortemente com z."},
+{n:2,t:"Caixa com integrando polinomial",formula:"0≤x≤3, 0≤y≤3, 0≤z≤1",result:"549/2",b:[0,3,0,3,0,1],inside:(x,y,z)=>x>=0&&x<=3&&y>=0&&y<=3&&z>=0&&z<=1,w:(x,y,z)=>3*x*x+3*Math.pow(y,3)+5*Math.pow(z,3),note:"Novamente o domínio é uma caixa; agora a variação do integrando ocorre nas três direções."},
+{n:3,t:"0≤z≤y≤x²",formula:"0≤x≤1, 0≤y≤x², 0≤z≤y; integrando 3",result:"3/10",b:[0,1,0,1,0,1],inside:(x,y,z)=>x>=0&&x<=1&&y>=0&&y<=x*x+eps&&z>=0&&z<=y+eps,w:(x,y,z)=>3,note:"O teto z=y repousa sobre a região do plano xy que fica abaixo da parábola y=x²."},
+{n:4,t:"Tetraedro",formula:"x,y,z≥0, 10x+10y+z≤2",result:"1/75",b:[0,.2,0,.2,0,2],inside:(x,y,z)=>x>=0&&y>=0&&z>=0&&10*x+10*y+z<=2+eps,w:()=>1,note:"Os interceptos do plano são x=1/5, y=1/5 e z=2. O sólido é o tetraedro formado com os planos coordenados."},
+{n:5,t:"Cilindro parabólico e plano",formula:"x²/4≤y≤1, 0≤z≤1−y",result:"16/15",b:[-2,2,0,1,0,1],inside:(x,y,z)=>y>=x*x/4-eps&&y<=1+eps&&z>=0&&z<=1-y+eps,w:()=>1,note:"A base fica entre o cilindro parabólico x²=4y e a reta y=1; o teto é o plano z=1−y."},
+{n:6,t:"Primeiro octante — y²≤x≤1",formula:"0≤y≤1, y²≤x≤1, 0≤z≤y",result:"1/4",b:[0,1,0,1,0,1],inside:(x,y,z)=>y>=0&&y<=1&&x>=y*y-eps&&x<=1+eps&&z>=0&&z<=y+eps,w:()=>1,note:"O teto é z=y e a parede curva é o cilindro parabólico x=y²."},
+{n:7,t:"Abaixo do cone z=r, r≤4",formula:"0≤θ≤2π, 0≤r≤4, 0≤z≤r; integrando 4r",result:"512π/3",b:[-4,4,-4,4,0,4],inside:(x,y,z)=>{const r=Math.hypot(x,y);return r<=4+eps&&z>=0&&z<=r+eps},w:(x,y,z)=>4*Math.hypot(x,y),note:"O sólido está abaixo do cone z=r, acima do plano z=0 e dentro do cilindro r=4."},
+{n:8,t:"Cone z=r cortado por z=3",formula:"0≤r≤3, r≤z≤3",result:"9π",b:[-3,3,-3,3,0,3],inside:(x,y,z)=>{const r=Math.hypot(x,y);return z>=r-eps&&z<=3+eps&&z>=0},w:()=>1,note:"É a parte interna do cone z=r abaixo do plano horizontal z=3."},
+{n:9,t:"Mesmo cone, densidade r²",formula:"0≤r≤3, r≤z≤3; densidade x²+y²=r²",result:"243π/10",b:[-3,3,-3,3,0,3],inside:(x,y,z)=>{const r=Math.hypot(x,y);return z>=r-eps&&z<=3+eps&&z>=0},w:(x,y,z)=>x*x+y*y,note:"A geometria é a mesma do exercício 8; a cor evidencia que a densidade cresce quando nos afastamos do eixo z."},
+{n:10,t:"Entre dois paraboloides",formula:"r²≤z≤18−r², 0≤r≤3; integrando 2r",result:"1296π/5",b:[-3,3,-3,3,0,18],inside:(x,y,z)=>{const r2=x*x+y*y;return r2<=9+eps&&z>=r2-eps&&z<=18-r2+eps},w:(x,y,z)=>2*Math.hypot(x,y),note:"Os paraboloides se encontram em r=3 e z=9. O sólido é fechado entre as duas superfícies."},
+{n:11,t:"Esfera de raio 2",formula:"x²+y²+z²≤4",result:"32π/3",b:[-2,2,-2,2,-2,2],inside:(x,y,z)=>x*x+y*y+z*z<=4+eps,w:()=>1,note:"Em esféricas, 0≤ρ≤2, 0≤φ≤π e 0≤θ≤2π."},
+{n:12,t:"Dentro da esfera e acima do cone",formula:"ρ≤2 e 0≤φ≤π/4; densidade ρ²",result:"32π(2−√2)/5",b:[-2,2,-2,2,0,2],inside:(x,y,z)=>{const r=Math.hypot(x,y),rho=Math.hypot(r,z);return rho<=2+eps&&z>=r-eps&&z>=0},w:(x,y,z)=>x*x+y*y+z*z,note:"A condição z≥r corresponde a 0≤φ≤π/4. A cor representa a densidade ρ², maior perto da esfera externa."}
+];
+const ex=document.getElementById("ex"),formula=document.getElementById("formula"),result=document.getElementById("result"),note=document.getElementById("note"),plot=document.getElementById("plot");
+E.forEach((e,i)=>{const o=document.createElement("option");o.value=i;o.textContent=e.n+". "+e.t;ex.appendChild(o)});
+function lin(a,b,n){return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1))}
+function draw(i){
+ const e=E[i], [xmin,xmax,ymin,ymax,zmin,zmax]=e.b;
+ const dx=(xmax-xmin)*.07||.1,dy=(ymax-ymin)*.07||.1,dz=(zmax-zmin)*.07||.1;
+ const xs=lin(xmin-dx,xmax+dx,30),ys=lin(ymin-dy,ymax+dy,30),zs=lin(zmin-dz,zmax+dz,30);
+ const X=[],Y=[],Z=[],V=[];
+ for(const z of zs)for(const y of ys)for(const x of xs){X.push(x);Y.push(y);Z.push(z);V.push(e.inside(x,y,z)?1:0)}
+ const px=[],py=[],pz=[],pc=[];
+ const sx=lin(xmin,xmax,14),sy=lin(ymin,ymax,14),sz=lin(zmin,zmax,14);
+ for(const z of sz)for(const y of sy)for(const x of sx)if(e.inside(x,y,z)){px.push(x);py.push(y);pz.push(z);pc.push(e.w(x,y,z))}
+ const varying=pc.length>1 && Math.max(...pc)-Math.min(...pc)>1e-10;
+ const shell={type:"isosurface",x:X,y:Y,z:Z,value:V,isomin:.5,isomax:.5,surface:{count:1},opacity:.34,showscale:false,caps:{x:{show:false},y:{show:false},z:{show:false}},hoverinfo:"skip",name:"Fronteira"};
+ const pts={type:"scatter3d",mode:"markers",x:px,y:py,z:pz,marker:{size:2.3,opacity:.48,color:varying?pc:undefined,colorscale:"Viridis",showscale:varying,colorbar:varying?{title:"integrando"}:undefined},hoverinfo:"skip",name:"Interior"};
+ const layout={margin:{l:0,r:0,t:45,b:0},title:{text:"Exercício "+e.n+" — "+e.t,font:{size:17}},scene:{xaxis:{title:"x"},yaxis:{title:"y"},zaxis:{title:"z"},aspectmode:"data",camera:{eye:{x:1.5,y:1.5,z:1.2}}},showlegend:false};
+ Plotly.react(plot,[shell,pts],layout,{responsive:true,displaylogo:false});
+ formula.textContent=e.formula; result.textContent=e.result; note.textContent=e.note;
+}
+ex.addEventListener("change",()=>draw(+ex.value)); draw(0);
+})();
+</script></body></html>
