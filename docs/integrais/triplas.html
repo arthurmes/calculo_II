@@ -54,11 +54,11 @@ function lin(a,b,n){return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1))}
 function draw(i){
  const e=E[i], [xmin,xmax,ymin,ymax,zmin,zmax]=e.b;
  const dx=(xmax-xmin)*.07||.1,dy=(ymax-ymin)*.07||.1,dz=(zmax-zmin)*.07||.1;
- const xs=lin(xmin-dx,xmax+dx,30),ys=lin(ymin-dy,ymax+dy,30),zs=lin(zmin-dz,zmax+dz,30);
+ const xs=lin(xmin-dx,xmax+dx,42),ys=lin(ymin-dy,ymax+dy,42),zs=lin(zmin-dz,zmax+dz,42);
  const X=[],Y=[],Z=[],V=[];
  for(const z of zs)for(const y of ys)for(const x of xs){X.push(x);Y.push(y);Z.push(z);V.push(e.inside(x,y,z)?1:0)}
  const px=[],py=[],pz=[],pc=[];
- const sx=lin(xmin,xmax,14),sy=lin(ymin,ymax,14),sz=lin(zmin,zmax,14);
+ const sx=lin(xmin,xmax,20),sy=lin(ymin,ymax,20),sz=lin(zmin,zmax,20);
  for(const z of sz)for(const y of sy)for(const x of sx)if(e.inside(x,y,z)){px.push(x);py.push(y);pz.push(z);pc.push(e.w(x,y,z))}
  const varying=pc.length>1 && Math.max(...pc)-Math.min(...pc)>1e-10;
  const shell={type:"isosurface",x:X,y:Y,z:Z,value:V,isomin:.5,isomax:.5,surface:{count:1},opacity:.34,showscale:false,caps:{x:{show:false},y:{show:false},z:{show:false}},hoverinfo:"skip",name:"Fronteira"};
