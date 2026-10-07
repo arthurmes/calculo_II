@@ -332,7 +332,7 @@
     Isso faz a malha acompanhar exatamente as bordas da região e elimina
     o "serrilhado" que aparecia nas curvas x = y², x = sqrt(y), etc.
   */
-  function makeRegionMesh(ex, ny=96, nv=64) {
+  function makeRegionMesh(ex, ny=160, nv=100) {
     const x = [];
     const y = [];
     const z = [];
@@ -369,7 +369,7 @@
     return {x,y,z,i,j,k};
   }
 
-  function makeBoundary(ex, n=180) {
+  function makeBoundary(ex, n=280) {
     const ys = linspace(ex.yMin, ex.yMax, n);
     const left = ys.map(y => ex.fixedY.span(y)[0]);
     const right = ys.map(y => ex.fixedY.span(y)[1]);
@@ -384,7 +384,7 @@
   function makeSlice(ex, value) {
     const cfg = mode === "x" ? ex.fixedX : ex.fixedY;
     const [a,b] = cfg.span(value);
-    const t = linspace(a,b,120);
+    const t = linspace(a,b,180);
 
     let xs, ys;
     if (mode === "x") {
