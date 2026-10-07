@@ -8,45 +8,53 @@
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.45; color: #1f2937; background: #f7f7f8;
+      line-height: 1.45; color:#1f2937; background:#f7f7f8;
     }
-    body { margin: 0; }
-    main { max-width: 1220px; margin: 0 auto; padding: 18px 14px 34px; }
+    body { margin:0; }
+    main { max-width:1120px; margin:0 auto; padding:18px 14px 34px; }
     .top { display:flex; gap:14px; justify-content:space-between; align-items:baseline; flex-wrap:wrap; }
-    h1 { font-size: clamp(1.5rem, 3vw, 2.25rem); margin:0; }
-    h2 { margin:0; font-size:1.05rem; }
+    h1 { font-size:clamp(1.5rem,3vw,2.25rem); margin:0; }
     p { color:#4b5563; }
     a { color:#111827; font-weight:650; }
-    .controls { display:grid; grid-template-columns:minmax(280px,1.35fr) minmax(240px,.8fr); gap:14px; margin:16px 0; }
-    .panel, .formula, .note {
+    .controls {
+      display:grid; grid-template-columns:minmax(300px,1.2fr) minmax(260px,.8fr);
+      gap:14px; margin:16px 0;
+    }
+    .panel,.formula,.note {
       background:white; border:1px solid #e5e7eb; border-radius:16px; padding:14px;
     }
     label { display:block; font-weight:650; margin-bottom:6px; }
-    select { width:100%; min-height:42px; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px; background:white; font-size:1rem; }
-    .checks { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; }
+    select {
+      width:100%; min-height:42px; border:1px solid #d1d5db; border-radius:10px;
+      padding:8px 10px; background:white; font-size:1rem;
+    }
+    .checks { display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
     .checks label { display:flex; align-items:center; gap:7px; margin:0; font-weight:500; }
     .limitBox { margin-top:14px; padding-top:12px; border-top:1px solid #e5e7eb; }
     .limitBox > strong { display:block; margin-bottom:9px; }
-    .limitGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .limitGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; }
     .field label { font-size:.84rem; color:#4b5563; margin-bottom:4px; }
     .sliderValue { font-weight:700; color:#111827; }
     .field input[type="range"] { width:100%; margin:3px 0 0; }
     .field.disabled { opacity:.42; }
     .field.disabled input { cursor:not-allowed; }
-    .readout { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; }
+    .readout {
+      background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px;
+    }
     .readout strong { display:block; font-size:.82rem; color:#6b7280; margin-bottom:4px; }
-    .plots { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .plotCard { background:white; border:1px solid #e5e7eb; border-radius:18px; overflow:hidden; }
-    .plotTitle { padding:11px 14px 0; font-weight:700; color:#374151; }
-    .plot { min-height:560px; }
+    #physicalPlot { min-height:650px; }
     .formula { margin-top:14px; }
     .formula strong { display:block; margin-bottom:5px; }
-    .formula code { display:inline-block; background:#eef2f7; padding:.24em .5em; border-radius:.4em; white-space:normal; overflow-wrap:anywhere; }
+    .formula code {
+      display:inline-block; background:#eef2f7; padding:.24em .5em;
+      border-radius:.4em; white-space:normal; overflow-wrap:anywhere;
+    }
     .note { margin-top:10px; background:#eef2ff; border-left:4px solid #6366f1; color:#374151; }
-    .mini { font-size:.92rem; color:#6b7280; margin:.35rem 0 0; }
-    @media (max-width: 820px) {
-      .controls, .plots { grid-template-columns:1fr; }
-      .plot { min-height:500px; }
+    .mini { font-size:.92rem; color:#6b7280; margin:.6rem 0 0; }
+    @media (max-width:760px) {
+      .controls,.limitGrid { grid-template-columns:1fr; }
+      #physicalPlot { min-height:540px; }
     }
   </style>
 </head>
@@ -58,22 +66,18 @@
   </div>
 
   <p>
-    A ideia é a mesma dos retângulos cartesianos e polares, agora em três dimensões:
-    uma caixa simples no espaço das coordenadas pode virar um <strong>paralelepípedo curvilíneo</strong>
-    no espaço <code>(x,y,z)</code>. Compare os dois quadros e gire as figuras.
+    Use os sliders para alterar diretamente a região no espaço. Em coordenadas cilíndricas,
+    variam <strong>r</strong> e <strong>θ</strong>; em coordenadas esféricas, variam
+    <strong>ρ</strong>, <strong>θ</strong> e <strong>φ</strong>.
   </p>
 
   <section class="controls">
     <div class="panel">
       <label for="example">Exemplo</label>
       <select id="example">
-        <option value="cart">1. Caixa cartesiana — dx dy dz</option>
-        <option value="cylCell">2. “Paralelepípedo cilíndrico” — r dr dθ dz</option>
-        <option value="cylinder">3. Cilindro / casca cilíndrica — integral tripla em cilíndricas</option>
-        <option value="cylSector">4. Setor cilíndrico anular — limites constantes</option>
-        <option value="sphCell">5. “Paralelepípedo esférico” — ρ² senφ dρ dφ dθ</option>
-        <option value="ball">6. Casca esférica — integral tripla em esféricas</option>
-        <option value="sphSector">7. Setor de casca esférica — limites constantes</option>
+        <option value="cart">1. Paralelepípedo cartesiano — dx dy dz</option>
+        <option value="cyl">2. Coordenadas cilíndricas — r dr dθ dz</option>
+        <option value="sph">3. Coordenadas esféricas — ρ² senφ dρ dφ dθ</option>
       </select>
 
       <div class="limitBox" id="limitBox">
@@ -107,32 +111,25 @@
       </div>
 
       <div class="checks">
-        <label><input id="wire" type="checkbox" checked> mostrar linhas de coordenadas</label>
+        <label><input id="wire" type="checkbox" checked> mostrar bordas da região</label>
       </div>
     </div>
 
     <div class="panel">
       <div class="readout">
-        <strong>Limites</strong>
+        <strong>Limites atuais</strong>
         <span id="limits"></span>
       </div>
-      <p class="mini">
+      <p class="mini" id="convention">
         Convenção esférica: <code>θ</code> é o azimute no plano <code>xy</code> e
-        <code>φ</code> é o ângulo medido a partir do eixo <code>z</code> positivo.
+        <code>φ</code> é medido a partir do eixo <code>z</code> positivo.
       </p>
     </div>
   </section>
 
-  <section class="plots">
-    <div class="plotCard">
-      <div class="plotTitle">No espaço das coordenadas</div>
-      <div id="paramPlot" class="plot" role="img" aria-label="Região no espaço das coordenadas"></div>
-    </div>
-    <div class="plotCard">
-      <div class="plotTitle">Depois da transformação para (x,y,z)</div>
-      <div id="physicalPlot" class="plot" role="img" aria-label="Região correspondente no espaço físico"></div>
-    </div>
-  </section>
+  <div class="plotCard">
+    <div id="physicalPlot" role="img" aria-label="Região tridimensional correspondente aos limites escolhidos"></div>
+  </div>
 
   <div class="formula">
     <strong id="formulaTitle"></strong>
@@ -145,11 +142,11 @@
 (() => {
   const $ = id => document.getElementById(id);
   const PI = Math.PI;
-  const paramPlot = $("paramPlot");
-  const physicalPlot = $("physicalPlot");
+  const plot = $("physicalPlot");
   const example = $("example");
   const wire = $("wire");
   const limitBox = $("limitBox");
+  const convention = $("convention");
   const rMin = $("rMin"), rMax = $("rMax");
   const thetaMin = $("thetaMin"), thetaMax = $("thetaMax");
   const phiMin = $("phiMin"), phiMax = $("phiMax");
@@ -169,11 +166,40 @@
     [phiMin,phiChoices],[phiMax,phiChoices]
   ]);
 
+  const examples = {
+    cart: {
+      kind:"cart",
+      title:"Paralelepípedo cartesiano",
+      bounds:[0.5,1.8, 0.35,1.45, 0.25,1.45],
+      formulaTitle:"Elemento de volume cartesiano",
+      formula:"dV = dx dy dz",
+      limits:"0,5 ≤ x ≤ 1,8; 0,35 ≤ y ≤ 1,45; 0,25 ≤ z ≤ 1,45",
+      note:"O elemento de volume cartesiano é um pequeno paralelepípedo com lados dx, dy e dz."
+    },
+    cyl: {
+      kind:"cyl",
+      title:"Região em coordenadas cilíndricas",
+      bounds:[1,3, PI/6,2*PI/3, 0,3],
+      formulaTitle:"Integral tripla em coordenadas cilíndricas",
+      note:"As superfícies r constante são cilindros; θ constante produz semiplanos verticais. O fator r no elemento de volume vem do comprimento transversal r dθ."
+    },
+    sph: {
+      kind:"sph",
+      title:"Região em coordenadas esféricas",
+      bounds:[1,3, PI/6,2*PI/3, PI/6,PI/2],
+      formulaTitle:"Integral tripla em coordenadas esféricas",
+      note:"As superfícies ρ constante são esferas, θ constante são semiplanos verticais e φ constante são cones. O elemento de volume é ρ² senφ dρ dφ dθ."
+    }
+  };
+
+  function linspace(a,b,n) {
+    return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
+  }
+
   function sliderChoice(slider) {
     const choices=sliderChoices.get(slider);
     return choices[Math.max(0,Math.min(choices.length-1,Number(slider.value)))];
   }
-
   function sliderNumber(slider) { return sliderChoice(slider)[0]; }
   function sliderLabel(slider) { return sliderChoice(slider)[1]; }
 
@@ -209,94 +235,19 @@
     }
   }
 
-  const examples = {
-    cart: {
-      kind:"cart",
-      title:"Caixa cartesiana",
-      bounds:[0.5,1.6, 0.4,1.35, 0.25,1.2],
-      labels:["x","y","z"],
-      limits:"0,5 ≤ x ≤ 1,6; 0,4 ≤ y ≤ 1,35; 0,25 ≤ z ≤ 1,2",
-      formulaTitle:"Elemento de volume cartesiano",
-      formula:"dV = dx dy dz",
-      note:"Aqui nada se curva: uma caixa no espaço (x,y,z) continua sendo a mesma caixa no espaço físico. Esse é o padrão de comparação para os outros sistemas."
-    },
-    cylCell: {
-      kind:"cyl",
-      title:"Paralelepípedo cilíndrico",
-      bounds:[1,2, PI/6,PI/2, 0.35,1.35],
-      labels:["r","θ","z"],
-      limits:"1 ≤ r ≤ 2; π/6 ≤ θ ≤ π/2; 0,35 ≤ z ≤ 1,35",
-      formulaTitle:"Elemento de volume em coordenadas cilíndricas",
-      formula:"x=r cosθ, y=r senθ, z=z;   dV = r dr dθ dz",
-      note:"A caixa em (r,θ,z) vira uma cunha anular. Para uma célula muito pequena, seus comprimentos característicos são aproximadamente dr, r dθ e dz; por isso aparece o Jacobiano r."
-    },
-    cylinder: {
-      kind:"cyl",
-      title:"Cilindro / casca cilíndrica",
-      bounds:[1,2, 0,2*PI, 0,3],
-      labels:["r","θ","z"],
-      limits:"1 ≤ r ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ z ≤ 3",
-      formulaTitle:"Volume do cilindro",
-      formula:"V = ∫₀²π ∫₁² ∫₀³ r dz dr dθ",
-      note:"No espaço (r,θ,z), os limites formam uma caixa. No espaço físico, ela se enrola ao redor do eixo z e produz um cilindro ou uma casca cilíndrica, conforme os raios escolhidos."
-    },
-    cylSector: {
-      kind:"cyl",
-      title:"Setor cilíndrico anular",
-      bounds:[1,3, PI/4,2*PI/3, -0.5,1.5],
-      labels:["r","θ","z"],
-      limits:"1 ≤ r ≤ 3; π/4 ≤ θ ≤ 2π/3; −0,5 ≤ z ≤ 1,5",
-      formulaTitle:"Integral tripla com limites constantes em cilíndricas",
-      formula:"∭_E f(x,y,z) dV = ∫_{π/4}^{2π/3} ∫₁³ ∫_{−0,5}^{1,5} f(r cosθ,r senθ,z) r dz dr dθ",
-      note:"É o análogo tridimensional exato de um setor anular em polares: duas superfícies cilíndricas, dois semiplanos radiais e dois planos horizontais."
-    },
-    sphCell: {
-      kind:"sph",
-      title:"Paralelepípedo esférico",
-      bounds:[1,2, PI/6,PI/2, PI/4,2*PI/3],
-      labels:["ρ","θ","φ"],
-      limits:"1 ≤ ρ ≤ 2; π/6 ≤ θ ≤ π/2; π/4 ≤ φ ≤ 2π/3",
-      formulaTitle:"Elemento de volume em coordenadas esféricas",
-      formula:"x=ρ senφ cosθ, y=ρ senφ senθ, z=ρ cosφ;   dV = ρ² senφ dρ dφ dθ",
-      note:"A caixa em (ρ,θ,φ) vira uma pequena cunha esférica. Para uma célula pequena, os comprimentos são aproximadamente dρ, ρ senφ dθ e ρ dφ, produzindo o Jacobiano ρ² senφ."
-    },
-    ball: {
-      kind:"sph",
-      title:"Casca esférica",
-      bounds:[1,2, 0,2*PI, 0,PI],
-      labels:["ρ","θ","φ"],
-      limits:"1 ≤ ρ ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ φ ≤ π",
-      formulaTitle:"Volume da bola",
-      formula:"V = ∫₀²π ∫₀^π ∫₁² ρ² senφ dρ dφ dθ",
-      note:"Outra vez, uma caixa retangular de limites no espaço das coordenadas se transforma num sólido curvo. Com raio mínimo positivo, obtemos uma casca esférica; os ângulos podem recortar apenas um setor dela."
-    },
-    sphSector: {
-      kind:"sph",
-      title:"Setor de casca esférica",
-      bounds:[1,3, PI/6,2*PI/3, PI/6,PI/2],
-      labels:["ρ","θ","φ"],
-      limits:"1 ≤ ρ ≤ 3; π/6 ≤ θ ≤ 2π/3; π/6 ≤ φ ≤ π/2",
-      formulaTitle:"Integral tripla com limites constantes em esféricas",
-      formula:"∭_E f dV = ∫_{π/6}^{2π/3} ∫_{π/6}^{π/2} ∫₁³ f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ",
-      note:"A região é limitada por duas esferas concêntricas, dois semiplanos de azimute constante e dois cones de φ constante. É o 'paralelepípedo' natural das coordenadas esféricas."
-    }
-  };
-
-  function linspace(a,b,n){
-    return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
-  }
-
   function configureControls(reset=true) {
     const ex=examples[example.value];
-    limitBox.style.display = ex.kind==="cart" ? "none" : "block";
-    document.querySelectorAll(".radialName").forEach(el => el.textContent = ex.kind==="sph" ? "ρ" : "r");
-    document.querySelectorAll(".phiField").forEach(el => {
-      el.classList.toggle("disabled", ex.kind!=="sph");
-      el.querySelector("input").disabled = ex.kind!=="sph";
+    const active=ex.kind!=="cart";
+    limitBox.style.display=active?"block":"none";
+    convention.style.display=ex.kind==="sph"?"block":"none";
+    document.querySelectorAll(".radialName").forEach(el=>el.textContent=ex.kind==="sph"?"ρ":"r");
+    document.querySelectorAll(".phiField").forEach(el=>{
+      el.classList.toggle("disabled",ex.kind!=="sph");
+      el.querySelector("input").disabled=ex.kind!=="sph";
     });
 
-    if (ex.kind==="cart") return;
-    if (reset) {
+    if(!active) return;
+    if(reset) {
       setSliderNearest(rMin,ex.bounds[0]);
       setSliderNearest(rMax,ex.bounds[1]);
       setSliderNearest(thetaMin,ex.bounds[2]);
@@ -321,59 +272,63 @@
   }
 
   function dynamicText(ex,B) {
-    if (ex.kind==="cart") return {limits:ex.limits, formula:ex.formula};
-    const rr0=String(B[0]).replace(".",","), rr1=String(B[1]).replace(".",",");
+    if(ex.kind==="cart") return {limits:ex.limits,formula:ex.formula};
+    const a=String(B[0]).replace(".",","), b=String(B[1]).replace(".",",");
     const t0=sliderLabel(thetaMin), t1=sliderLabel(thetaMax);
-    if (ex.kind==="cyl") {
+
+    if(ex.kind==="cyl") {
       const z0=String(B[4]).replace(".",","), z1=String(B[5]).replace(".",",");
-      const limits=`${rr0} ≤ r ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${z0} ≤ z ≤ ${z1}`;
-      if (example.value==="cylCell") return {limits, formula:"x=r cosθ, y=r senθ, z=z;   dV = r dr dθ dz"};
-      if (example.value==="cylinder") return {limits, formula:`V = ∫_{${t0}}^{${t1}} ∫_${rr0}^${rr1} ∫_${z0}^${z1} r dz dr dθ`};
-      return {limits, formula:`∭_E f(x,y,z) dV = ∫_{${t0}}^{${t1}} ∫_${rr0}^${rr1} ∫_${z0}^${z1} f(r cosθ,r senθ,z) r dz dr dθ`};
+      return {
+        limits:`${a} ≤ r ≤ ${b}; ${t0} ≤ θ ≤ ${t1}; ${z0} ≤ z ≤ ${z1}`,
+        formula:`∭_E f(x,y,z) dV = ∫_{${t0}}^{${t1}} ∫_${a}^${b} ∫_${z0}^${z1} f(r cosθ,r senθ,z) r dz dr dθ`
+      };
     }
 
     const p0=sliderLabel(phiMin), p1=sliderLabel(phiMax);
-    const limits=`${rr0} ≤ ρ ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${p0} ≤ φ ≤ ${p1}`;
-    if (example.value==="sphCell") return {limits, formula:"x=ρ senφ cosθ, y=ρ senφ senθ, z=ρ cosφ;   dV = ρ² senφ dρ dφ dθ"};
-    if (example.value==="ball") return {limits, formula:`V = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${rr0}^${rr1} ρ² senφ dρ dφ dθ`};
-    return {limits, formula:`∭_E f dV = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${rr0}^${rr1} f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ`};
+    return {
+      limits:`${a} ≤ ρ ≤ ${b}; ${t0} ≤ θ ≤ ${t1}; ${p0} ≤ φ ≤ ${p1}`,
+      formula:`∭_E f dV = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${a}^${b} f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ`
+    };
   }
 
-  function cloneCamera(div){
-    const c = div && div._fullLayout && div._fullLayout.scene ? div._fullLayout.scene.camera : null;
+  function cloneCamera() {
+    const c=plot && plot._fullLayout && plot._fullLayout.scene ? plot._fullLayout.scene.camera : null;
     return c ? JSON.parse(JSON.stringify(c)) : null;
   }
-
-  function restoreCamera(div,c){
-    return c ? Plotly.relayout(div, {"scene.camera":c}) : Promise.resolve();
+  function restoreCamera(c) {
+    return c ? Plotly.relayout(plot,{"scene.camera":c}) : Promise.resolve();
   }
 
-  function boxMesh(b,color="#60a5fa"){
-    const [a,A,b0,B,c,C]=b;
-    const x=[a,A,A,a,a,A,A,a], y=[b0,b0,B,B,b0,b0,B,B], z=[c,c,c,c,C,C,C,C];
-    const i=[0,0,0,1,1,2,4,4,4,5,5,6];
-    const j=[1,2,4,2,5,3,5,6,0,6,1,7];
-    const k=[2,3,5,3,6,7,6,7,5,7,2,3];
-    return {type:"mesh3d",x,y,z,i,j,k,color,opacity:.62,flatshading:true,hoverinfo:"skip",showlegend:false};
+  function boxMesh(B) {
+    const [a,A,b,Bb,c,C]=B;
+    return {
+      type:"mesh3d",
+      x:[a,A,A,a,a,A,A,a], y:[b,b,Bb,Bb,b,b,Bb,Bb], z:[c,c,c,c,C,C,C,C],
+      i:[0,0,0,1,1,2,4,4,4,5,5,6],
+      j:[1,2,4,2,5,3,5,6,0,6,1,7],
+      k:[2,3,5,3,6,7,6,7,5,7,2,3],
+      color:"#60a5fa", opacity:.65, flatshading:true, hoverinfo:"skip", showlegend:false
+    };
   }
 
-  function boxEdges(b,color="#374151"){
-    const [a,A,b0,B,c,C]=b;
-    const v=[[a,b0,c],[A,b0,c],[A,B,c],[a,B,c],[a,b0,C],[A,b0,C],[A,B,C],[a,B,C]];
+  function boxEdges(B) {
+    const [a,A,b,Bb,c,C]=B;
+    const v=[[a,b,c],[A,b,c],[A,Bb,c],[a,Bb,c],[a,b,C],[A,b,C],[A,Bb,C],[a,Bb,C]];
     const edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
     const x=[],y=[],z=[];
     edges.forEach(([u,vv])=>{x.push(v[u][0],v[vv][0],null);y.push(v[u][1],v[vv][1],null);z.push(v[u][2],v[vv][2],null);});
-    return {type:"scatter3d",mode:"lines",x,y,z,line:{color,width:4},hoverinfo:"skip",showlegend:false};
+    return {type:"scatter3d",mode:"lines",x,y,z,line:{color:"#374151",width:4},hoverinfo:"skip",showlegend:false};
   }
 
-  function cylSurfaces(B){
+  function cylSurfaces(B) {
     const [r0,r1,t0,t1,z0,z1]=B;
-    const ts=linspace(t0,t1,48), rs=linspace(r0,r1,28), zs=linspace(z0,z1,26);
+    const ts=linspace(t0,t1,52), rs=linspace(r0,r1,30), zs=linspace(z0,z1,28);
     const traces=[];
+
     [r0,r1].forEach(r=>{
       const x=[],y=[],z=[];
       zs.forEach(zz=>{x.push(ts.map(t=>r*Math.cos(t)));y.push(ts.map(t=>r*Math.sin(t)));z.push(ts.map(()=>zz));});
-      traces.push({type:"surface",x,y,z,showscale:false,opacity:.7,colorscale:[[0,"#60a5fa"],[1,"#60a5fa"]],hoverinfo:"skip"});
+      traces.push({type:"surface",x,y,z,showscale:false,opacity:.72,colorscale:[[0,"#60a5fa"],[1,"#60a5fa"]],hoverinfo:"skip"});
     });
     [z0,z1].forEach(zz=>{
       const x=[],y=[],z=[];
@@ -383,14 +338,13 @@
     [t0,t1].forEach(t=>{
       const x=[],y=[],z=[];
       zs.forEach(zz=>{x.push(rs.map(r=>r*Math.cos(t)));y.push(rs.map(r=>r*Math.sin(t)));z.push(rs.map(()=>zz));});
-      traces.push({type:"surface",x,y,z,showscale:false,opacity:.68,colorscale:[[0,"#bfdbfe"],[1,"#bfdbfe"]],hoverinfo:"skip"});
+      traces.push({type:"surface",x,y,z,showscale:false,opacity:.66,colorscale:[[0,"#bfdbfe"],[1,"#bfdbfe"]],hoverinfo:"skip"});
     });
     return traces;
   }
 
-  function cylWire(B){
-    const [r0,r1,t0,t1,z0,z1]=B, ts=linspace(t0,t1,100);
-    const out=[];
+  function cylWire(B) {
+    const [r0,r1,t0,t1,z0,z1]=B, ts=linspace(t0,t1,120), out=[];
     [r0,r1].forEach(r=>[z0,z1].forEach(z=>out.push({
       type:"scatter3d",mode:"lines",x:ts.map(t=>r*Math.cos(t)),y:ts.map(t=>r*Math.sin(t)),z:ts.map(()=>z),
       line:{color:"#374151",width:4},hoverinfo:"skip",showlegend:false
@@ -406,33 +360,36 @@
     return out;
   }
 
-  function sphXYZ(r,t,p){ return [r*Math.sin(p)*Math.cos(t), r*Math.sin(p)*Math.sin(t), r*Math.cos(p)]; }
+  function sphXYZ(r,t,p) {
+    return [r*Math.sin(p)*Math.cos(t),r*Math.sin(p)*Math.sin(t),r*Math.cos(p)];
+  }
 
-  function sphSurfaces(B){
+  function sphSurfaces(B) {
     const [r0,r1,t0,t1,p0,p1]=B;
-    const ts=linspace(t0,t1,44), ps=linspace(p0,p1,34), rs=linspace(r0,r1,28);
+    const ts=linspace(t0,t1,50), ps=linspace(p0,p1,38), rs=linspace(r0,r1,30);
     const traces=[];
+
     [r0,r1].forEach(r=>{
       const x=[],y=[],z=[];
       ps.forEach(p=>{const row=ts.map(t=>sphXYZ(r,t,p));x.push(row.map(q=>q[0]));y.push(row.map(q=>q[1]));z.push(row.map(q=>q[2]));});
-      traces.push({type:"surface",x,y,z,showscale:false,opacity:.68,colorscale:[[0,"#a78bfa"],[1,"#a78bfa"]],hoverinfo:"skip"});
+      traces.push({type:"surface",x,y,z,showscale:false,opacity:.7,colorscale:[[0,"#a78bfa"],[1,"#a78bfa"]],hoverinfo:"skip"});
     });
     [t0,t1].forEach(t=>{
       const x=[],y=[],z=[];
       ps.forEach(p=>{const row=rs.map(r=>sphXYZ(r,t,p));x.push(row.map(q=>q[0]));y.push(row.map(q=>q[1]));z.push(row.map(q=>q[2]));});
-      traces.push({type:"surface",x,y,z,showscale:false,opacity:.66,colorscale:[[0,"#c4b5fd"],[1,"#c4b5fd"]],hoverinfo:"skip"});
+      traces.push({type:"surface",x,y,z,showscale:false,opacity:.64,colorscale:[[0,"#c4b5fd"],[1,"#c4b5fd"]],hoverinfo:"skip"});
     });
     [p0,p1].forEach(p=>{
       const x=[],y=[],z=[];
       rs.forEach(r=>{const row=ts.map(t=>sphXYZ(r,t,p));x.push(row.map(q=>q[0]));y.push(row.map(q=>q[1]));z.push(row.map(q=>q[2]));});
-      traces.push({type:"surface",x,y,z,showscale:false,opacity:.62,colorscale:[[0,"#ddd6fe"],[1,"#ddd6fe"]],hoverinfo:"skip"});
+      traces.push({type:"surface",x,y,z,showscale:false,opacity:.6,colorscale:[[0,"#ddd6fe"],[1,"#ddd6fe"]],hoverinfo:"skip"});
     });
     return traces;
   }
 
-  function sphWire(B){
+  function sphWire(B) {
     const [r0,r1,t0,t1,p0,p1]=B, out=[];
-    const ts=linspace(t0,t1,100), ps=linspace(p0,p1,80), rs=linspace(r0,r1,60);
+    const ts=linspace(t0,t1,120), ps=linspace(p0,p1,90), rs=linspace(r0,r1,70);
     [r0,r1].forEach(r=>[p0,p1].forEach(p=>{
       const q=ts.map(t=>sphXYZ(r,t,p));
       out.push({type:"scatter3d",mode:"lines",x:q.map(a=>a[0]),y:q.map(a=>a[1]),z:q.map(a=>a[2]),line:{color:"#374151",width:4},hoverinfo:"skip",showlegend:false});
@@ -448,21 +405,7 @@
     return out;
   }
 
-  function layout(title,labels,physical=false){
-    return {
-      title:{text:title,x:.02,xanchor:"left",font:{size:16}},
-      margin:{l:0,r:0,t:52,b:0},
-      uirevision:"triple-camera-"+(physical?"physical":"param"),
-      scene:{
-        uirevision:"triple-camera-"+(physical?"physical":"param"),
-        xaxis:{title:labels[0]}, yaxis:{title:labels[1]}, zaxis:{title:labels[2]},
-        aspectmode:"data", camera:{eye:{x:1.45,y:1.45,z:1.12}}, bgcolor:"#fff"
-      },
-      showlegend:false,paper_bgcolor:"#fff",plot_bgcolor:"#fff"
-    };
-  }
-
-  function render(preserve=false){
+  function render(preserve=false) {
     const ex=examples[example.value];
     const B=currentBounds(ex);
     const text=dynamicText(ex,B);
@@ -471,29 +414,35 @@
     $("formula").textContent=text.formula;
     $("note").textContent=ex.note;
 
-    const cp=preserve?cloneCamera(paramPlot):null, cf=preserve?cloneCamera(physicalPlot):null;
-    const pTraces=[boxMesh(B, ex.kind==="sph"?"#a78bfa":"#60a5fa")];
-    if(wire.checked) pTraces.push(boxEdges(B));
-
-    let fTraces;
+    const saved=preserve?cloneCamera():null;
+    let traces;
     if(ex.kind==="cart") {
-      fTraces=[boxMesh(B,"#60a5fa")];
-      if(wire.checked) fTraces.push(boxEdges(B));
+      traces=[boxMesh(B)];
+      if(wire.checked) traces.push(boxEdges(B));
     } else if(ex.kind==="cyl") {
-      fTraces=cylSurfaces(B);
-      if(wire.checked) fTraces.push(...cylWire(B));
+      traces=cylSurfaces(B);
+      if(wire.checked) traces.push(...cylWire(B));
     } else {
-      fTraces=sphSurfaces(B);
-      if(wire.checked) fTraces.push(...sphWire(B));
+      traces=sphSurfaces(B);
+      if(wire.checked) traces.push(...sphWire(B));
     }
 
-    const pLayout=layout(ex.title+" em "+ex.labels.map(s=>"("+s+")").join(" "),ex.labels,false);
-    const fLayout=layout(ex.title,["x","y","z"],true);
+    const layout={
+      title:{text:ex.title,x:.02,xanchor:"left",font:{size:17}},
+      margin:{l:0,r:0,t:54,b:0},
+      uirevision:"triple-physical-camera",
+      scene:{
+        uirevision:"triple-physical-camera",
+        xaxis:{title:"x"},yaxis:{title:"y"},zaxis:{title:"z"},
+        aspectmode:"data",
+        camera:{eye:{x:1.45,y:1.45,z:1.12}},
+        bgcolor:"#fff"
+      },
+      showlegend:false,paper_bgcolor:"#fff",plot_bgcolor:"#fff"
+    };
 
-    Promise.all([
-      Plotly.react(paramPlot,pTraces,pLayout,{responsive:true,displaylogo:false,scrollZoom:true}),
-      Plotly.react(physicalPlot,fTraces,fLayout,{responsive:true,displaylogo:false,scrollZoom:true})
-    ]).then(()=>Promise.all([restoreCamera(paramPlot,cp),restoreCamera(physicalPlot,cf)]));
+    Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false,scrollZoom:true})
+      .then(()=>restoreCamera(saved));
   }
 
   example.addEventListener("change",()=>{
@@ -501,6 +450,7 @@
     render(false);
   });
   wire.addEventListener("change",()=>render(true));
+
   const pairs=new Map([
     [rMin,[rMin,rMax]],[rMax,[rMin,rMax]],
     [thetaMin,[thetaMin,thetaMax]],[thetaMax,[thetaMin,thetaMax]],
