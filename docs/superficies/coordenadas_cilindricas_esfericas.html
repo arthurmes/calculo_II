@@ -29,9 +29,10 @@
     .limitBox > strong { display:block; margin-bottom:9px; }
     .limitGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .field label { font-size:.84rem; color:#4b5563; margin-bottom:4px; }
-    .field select { min-height:38px; font-size:.95rem; }
+    .sliderValue { font-weight:700; color:#111827; }
+    .field input[type="range"] { width:100%; margin:3px 0 0; }
     .field.disabled { opacity:.42; }
-    .field.disabled select { cursor:not-allowed; }
+    .field.disabled input { cursor:not-allowed; }
     .readout { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; }
     .readout strong { display:block; font-size:.82rem; color:#6b7280; margin-bottom:4px; }
     .plots { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -79,28 +80,28 @@
         <strong>Escolha os limites</strong>
         <div class="limitGrid">
           <div class="field radialField">
-            <label for="rMin"><span class="radialName">r</span> mínimo</label>
-            <select id="rMin"></select>
+            <label for="rMin"><span class="radialName">r</span> mínimo: <span class="sliderValue" id="rMinValue"></span></label>
+            <input id="rMin" type="range" min="0" max="3" step="1">
           </div>
           <div class="field radialField">
-            <label for="rMax"><span class="radialName">r</span> máximo</label>
-            <select id="rMax"></select>
+            <label for="rMax"><span class="radialName">r</span> máximo: <span class="sliderValue" id="rMaxValue"></span></label>
+            <input id="rMax" type="range" min="0" max="3" step="1">
           </div>
           <div class="field angleField">
-            <label for="thetaMin">θ mínimo</label>
-            <select id="thetaMin"></select>
+            <label for="thetaMin">θ mínimo: <span class="sliderValue" id="thetaMinValue"></span></label>
+            <input id="thetaMin" type="range" min="0" max="16" step="1">
           </div>
           <div class="field angleField">
-            <label for="thetaMax">θ máximo</label>
-            <select id="thetaMax"></select>
+            <label for="thetaMax">θ máximo: <span class="sliderValue" id="thetaMaxValue"></span></label>
+            <input id="thetaMax" type="range" min="0" max="16" step="1">
           </div>
           <div class="field phiField">
-            <label for="phiMin">φ mínimo</label>
-            <select id="phiMin"></select>
+            <label for="phiMin">φ mínimo: <span class="sliderValue" id="phiMinValue"></span></label>
+            <input id="phiMin" type="range" min="0" max="8" step="1">
           </div>
           <div class="field phiField">
-            <label for="phiMax">φ máximo</label>
-            <select id="phiMax"></select>
+            <label for="phiMax">φ máximo: <span class="sliderValue" id="phiMaxValue"></span></label>
+            <input id="phiMax" type="range" min="0" max="8" step="1">
           </div>
         </div>
       </div>
@@ -162,23 +163,51 @@
   const phiChoices = thetaChoices.filter(([v]) => v <= PI + 1e-12);
   const radiusChoices = [[1,"1"],[2,"2"],[3,"3"],[4,"4"]];
 
-  function fillSelect(select, choices) {
-    select.innerHTML = "";
-    choices.forEach(([value,label]) => {
-      const option = document.createElement("option");
-      option.value = String(value);
-      option.textContent = label;
-      option.dataset.label = label;
-      select.appendChild(option);
-    });
+  const sliderChoices = new Map([
+    [rMin,radiusChoices],[rMax,radiusChoices],
+    [thetaMin,thetaChoices],[thetaMax,thetaChoices],
+    [phiMin,phiChoices],[phiMax,phiChoices]
+  ]);
+
+  function sliderChoice(slider) {
+    const choices=sliderChoices.get(slider);
+    return choices[Math.max(0,Math.min(choices.length-1,Number(slider.value)))];
   }
 
-  fillSelect(rMin, radiusChoices);
-  fillSelect(rMax, radiusChoices);
-  fillSelect(thetaMin, thetaChoices);
-  fillSelect(thetaMax, thetaChoices);
-  fillSelect(phiMin, phiChoices);
-  fillSelect(phiMax, phiChoices);
+  function sliderNumber(slider) { return sliderChoice(slider)[0]; }
+  function sliderLabel(slider) { return sliderChoice(slider)[1]; }
+
+  function setSliderNearest(slider,value) {
+    const choices=sliderChoices.get(slider);
+    let best=0,err=Infinity;
+    choices.forEach(([v],i)=>{
+      const e=Math.abs(v-value);
+      if(e<err){err=e;best=i;}
+    });
+    slider.value=String(best);
+  }
+
+  function updateSliderLabels() {
+    $("rMinValue").textContent=sliderLabel(rMin);
+    $("rMaxValue").textContent=sliderLabel(rMax);
+    $("thetaMinValue").textContent=sliderLabel(thetaMin);
+    $("thetaMaxValue").textContent=sliderLabel(thetaMax);
+    $("phiMinValue").textContent=sliderLabel(phiMin);
+    $("phiMaxValue").textContent=sliderLabel(phiMax);
+  }
+
+  function enforcePair(minSlider,maxSlider,changed) {
+    let a=Number(minSlider.value), b=Number(maxSlider.value);
+    const maxIndex=Number(maxSlider.max);
+    if(a<b) return;
+    if(changed===minSlider) {
+      if(a<maxIndex) maxSlider.value=String(a+1);
+      else minSlider.value=String(Math.max(0,b-1));
+    } else {
+      if(b>0) minSlider.value=String(b-1);
+      else maxSlider.value=String(Math.min(maxIndex,a+1));
+    }
+  }
 
   const examples = {
     cart: {
@@ -257,71 +286,44 @@
     return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
   }
 
-  function optionLabel(select) {
-    return select.options[select.selectedIndex]?.dataset.label || select.value;
-  }
-
-  function setSelectNearest(select, value) {
-    let best = 0, err = Infinity;
-    [...select.options].forEach((opt,i) => {
-      const e = Math.abs(Number(opt.value)-value);
-      if (e < err) { err=e; best=i; }
-    });
-    select.selectedIndex = best;
-  }
-
-  function refreshValidity() {
-    const r0=Number(rMin.value), r1=Number(rMax.value);
-    [...rMin.options].forEach(o => o.disabled = Number(o.value) >= r1);
-    [...rMax.options].forEach(o => o.disabled = Number(o.value) <= r0);
-
-    const t0=Number(thetaMin.value), t1=Number(thetaMax.value);
-    [...thetaMin.options].forEach(o => o.disabled = Number(o.value) >= t1);
-    [...thetaMax.options].forEach(o => o.disabled = Number(o.value) <= t0);
-
-    const p0=Number(phiMin.value), p1=Number(phiMax.value);
-    [...phiMin.options].forEach(o => o.disabled = Number(o.value) >= p1);
-    [...phiMax.options].forEach(o => o.disabled = Number(o.value) <= p0);
-  }
-
   function configureControls(reset=true) {
     const ex=examples[example.value];
     limitBox.style.display = ex.kind==="cart" ? "none" : "block";
     document.querySelectorAll(".radialName").forEach(el => el.textContent = ex.kind==="sph" ? "ρ" : "r");
     document.querySelectorAll(".phiField").forEach(el => {
       el.classList.toggle("disabled", ex.kind!=="sph");
-      el.querySelector("select").disabled = ex.kind!=="sph";
+      el.querySelector("input").disabled = ex.kind!=="sph";
     });
 
     if (ex.kind==="cart") return;
     if (reset) {
-      setSelectNearest(rMin, ex.bounds[0]);
-      setSelectNearest(rMax, ex.bounds[1]);
-      setSelectNearest(thetaMin, ex.bounds[2]);
-      setSelectNearest(thetaMax, ex.bounds[3]);
-      if (ex.kind==="sph") {
-        setSelectNearest(phiMin, ex.bounds[4]);
-        setSelectNearest(phiMax, ex.bounds[5]);
+      setSliderNearest(rMin,ex.bounds[0]);
+      setSliderNearest(rMax,ex.bounds[1]);
+      setSliderNearest(thetaMin,ex.bounds[2]);
+      setSliderNearest(thetaMax,ex.bounds[3]);
+      if(ex.kind==="sph") {
+        setSliderNearest(phiMin,ex.bounds[4]);
+        setSliderNearest(phiMax,ex.bounds[5]);
       } else {
-        setSelectNearest(phiMin, 0);
-        setSelectNearest(phiMax, PI);
+        setSliderNearest(phiMin,0);
+        setSliderNearest(phiMax,PI);
       }
     }
-    refreshValidity();
+    updateSliderLabels();
   }
 
   function currentBounds(ex) {
-    if (ex.kind==="cart") return ex.bounds.slice();
-    if (ex.kind==="cyl") {
-      return [Number(rMin.value),Number(rMax.value),Number(thetaMin.value),Number(thetaMax.value),ex.bounds[4],ex.bounds[5]];
+    if(ex.kind==="cart") return ex.bounds.slice();
+    if(ex.kind==="cyl") {
+      return [sliderNumber(rMin),sliderNumber(rMax),sliderNumber(thetaMin),sliderNumber(thetaMax),ex.bounds[4],ex.bounds[5]];
     }
-    return [Number(rMin.value),Number(rMax.value),Number(thetaMin.value),Number(thetaMax.value),Number(phiMin.value),Number(phiMax.value)];
+    return [sliderNumber(rMin),sliderNumber(rMax),sliderNumber(thetaMin),sliderNumber(thetaMax),sliderNumber(phiMin),sliderNumber(phiMax)];
   }
 
   function dynamicText(ex,B) {
     if (ex.kind==="cart") return {limits:ex.limits, formula:ex.formula};
     const rr0=String(B[0]).replace(".",","), rr1=String(B[1]).replace(".",",");
-    const t0=optionLabel(thetaMin), t1=optionLabel(thetaMax);
+    const t0=sliderLabel(thetaMin), t1=sliderLabel(thetaMax);
     if (ex.kind==="cyl") {
       const z0=String(B[4]).replace(".",","), z1=String(B[5]).replace(".",",");
       const limits=`${rr0} ≤ r ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${z0} ≤ z ≤ ${z1}`;
@@ -330,7 +332,7 @@
       return {limits, formula:`∭_E f(x,y,z) dV = ∫_{${t0}}^{${t1}} ∫_${rr0}^${rr1} ∫_${z0}^${z1} f(r cosθ,r senθ,z) r dz dr dθ`};
     }
 
-    const p0=optionLabel(phiMin), p1=optionLabel(phiMax);
+    const p0=sliderLabel(phiMin), p1=sliderLabel(phiMax);
     const limits=`${rr0} ≤ ρ ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${p0} ≤ φ ≤ ${p1}`;
     if (example.value==="sphCell") return {limits, formula:"x=ρ senφ cosθ, y=ρ senφ senθ, z=ρ cosφ;   dV = ρ² senφ dρ dφ dθ"};
     if (example.value==="ball") return {limits, formula:`V = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${rr0}^${rr1} ρ² senφ dρ dφ dθ`};
@@ -499,9 +501,16 @@
     render(false);
   });
   wire.addEventListener("change",()=>render(true));
-  [rMin,rMax,thetaMin,thetaMax,phiMin,phiMax].forEach(select => {
-    select.addEventListener("change",()=>{
-      refreshValidity();
+  const pairs=new Map([
+    [rMin,[rMin,rMax]],[rMax,[rMin,rMax]],
+    [thetaMin,[thetaMin,thetaMax]],[thetaMax,[thetaMin,thetaMax]],
+    [phiMin,[phiMin,phiMax]],[phiMax,[phiMin,phiMax]]
+  ]);
+  [rMin,rMax,thetaMin,thetaMax,phiMin,phiMax].forEach(slider=>{
+    slider.addEventListener("input",()=>{
+      const [a,b]=pairs.get(slider);
+      enforcePair(a,b,slider);
+      updateSliderLabels();
       render(true);
     });
   });
