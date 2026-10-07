@@ -68,10 +68,10 @@
       <select id="example">
         <option value="cart">1. Caixa cartesiana — dx dy dz</option>
         <option value="cylCell">2. “Paralelepípedo cilíndrico” — r dr dθ dz</option>
-        <option value="cylinder">3. Cilindro completo — integral tripla em cilíndricas</option>
+        <option value="cylinder">3. Cilindro / casca cilíndrica — integral tripla em cilíndricas</option>
         <option value="cylSector">4. Setor cilíndrico anular — limites constantes</option>
         <option value="sphCell">5. “Paralelepípedo esférico” — ρ² senφ dρ dφ dθ</option>
-        <option value="ball">6. Bola completa — integral tripla em esféricas</option>
+        <option value="ball">6. Casca esférica — integral tripla em esféricas</option>
         <option value="sphSector">7. Setor de casca esférica — limites constantes</option>
       </select>
 
@@ -203,7 +203,7 @@
     },
     cylinder: {
       kind:"cyl",
-      title:"Cilindro completo",
+      title:"Cilindro / casca cilíndrica",
       bounds:[1,2, 0,2*PI, 0,3],
       labels:["r","θ","z"],
       limits:"1 ≤ r ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ z ≤ 3",
@@ -233,7 +233,7 @@
     },
     ball: {
       kind:"sph",
-      title:"Bola completa",
+      title:"Casca esférica",
       bounds:[1,2, 0,2*PI, 0,PI],
       labels:["ρ","θ","φ"],
       limits:"1 ≤ ρ ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ φ ≤ π",
