@@ -366,7 +366,7 @@
 
   function sphSurfaces(B) {
     const [r0,r1,t0,t1,p0,p1]=B;
-    const ts=linspace(t0,t1,50), ps=linspace(p0,p1,38), rs=linspace(r0,r1,30);
+    const ts=linspace(t0,t1,96), ps=linspace(p0,p1,70), rs=linspace(r0,r1,54);
     const traces=[];
 
     [r0,r1].forEach(r=>{
@@ -389,7 +389,7 @@
 
   function sphWire(B) {
     const [r0,r1,t0,t1,p0,p1]=B, out=[];
-    const ts=linspace(t0,t1,120), ps=linspace(p0,p1,90), rs=linspace(r0,r1,70);
+    const ts=linspace(t0,t1,180), ps=linspace(p0,p1,130), rs=linspace(r0,r1,100);
     [r0,r1].forEach(r=>[p0,p1].forEach(p=>{
       const q=ts.map(t=>sphXYZ(r,t,p));
       out.push({type:"scatter3d",mode:"lines",x:q.map(a=>a[0]),y:q.map(a=>a[1]),z:q.map(a=>a[2]),line:{color:"#374151",width:4},hoverinfo:"skip",showlegend:false});
