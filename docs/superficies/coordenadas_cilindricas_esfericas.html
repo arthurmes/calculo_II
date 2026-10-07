@@ -25,6 +25,13 @@
     select { width:100%; min-height:42px; border:1px solid #d1d5db; border-radius:10px; padding:8px 10px; background:white; font-size:1rem; }
     .checks { display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; }
     .checks label { display:flex; align-items:center; gap:7px; margin:0; font-weight:500; }
+    .limitBox { margin-top:14px; padding-top:12px; border-top:1px solid #e5e7eb; }
+    .limitBox > strong { display:block; margin-bottom:9px; }
+    .limitGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .field label { font-size:.84rem; color:#4b5563; margin-bottom:4px; }
+    .field select { min-height:38px; font-size:.95rem; }
+    .field.disabled { opacity:.42; }
+    .field.disabled select { cursor:not-allowed; }
     .readout { background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; }
     .readout strong { display:block; font-size:.82rem; color:#6b7280; margin-bottom:4px; }
     .plots { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -67,6 +74,37 @@
         <option value="ball">6. Bola completa — integral tripla em esféricas</option>
         <option value="sphSector">7. Setor de casca esférica — limites constantes</option>
       </select>
+
+      <div class="limitBox" id="limitBox">
+        <strong>Escolha os limites</strong>
+        <div class="limitGrid">
+          <div class="field radialField">
+            <label for="rMin"><span class="radialName">r</span> mínimo</label>
+            <select id="rMin"></select>
+          </div>
+          <div class="field radialField">
+            <label for="rMax"><span class="radialName">r</span> máximo</label>
+            <select id="rMax"></select>
+          </div>
+          <div class="field angleField">
+            <label for="thetaMin">θ mínimo</label>
+            <select id="thetaMin"></select>
+          </div>
+          <div class="field angleField">
+            <label for="thetaMax">θ máximo</label>
+            <select id="thetaMax"></select>
+          </div>
+          <div class="field phiField">
+            <label for="phiMin">φ mínimo</label>
+            <select id="phiMin"></select>
+          </div>
+          <div class="field phiField">
+            <label for="phiMax">φ máximo</label>
+            <select id="phiMax"></select>
+          </div>
+        </div>
+      </div>
+
       <div class="checks">
         <label><input id="wire" type="checkbox" checked> mostrar linhas de coordenadas</label>
       </div>
@@ -110,6 +148,37 @@
   const physicalPlot = $("physicalPlot");
   const example = $("example");
   const wire = $("wire");
+  const limitBox = $("limitBox");
+  const rMin = $("rMin"), rMax = $("rMax");
+  const thetaMin = $("thetaMin"), thetaMax = $("thetaMax");
+  const phiMin = $("phiMin"), phiMax = $("phiMax");
+
+  const thetaChoices = [
+    [0,"0"], [PI/6,"π/6"], [PI/4,"π/4"], [PI/3,"π/3"], [PI/2,"π/2"],
+    [2*PI/3,"2π/3"], [3*PI/4,"3π/4"], [5*PI/6,"5π/6"], [PI,"π"],
+    [7*PI/6,"7π/6"], [5*PI/4,"5π/4"], [4*PI/3,"4π/3"], [3*PI/2,"3π/2"],
+    [5*PI/3,"5π/3"], [7*PI/4,"7π/4"], [11*PI/6,"11π/6"], [2*PI,"2π"]
+  ];
+  const phiChoices = thetaChoices.filter(([v]) => v <= PI + 1e-12);
+  const radiusChoices = [[1,"1"],[2,"2"],[3,"3"],[4,"4"]];
+
+  function fillSelect(select, choices) {
+    select.innerHTML = "";
+    choices.forEach(([value,label]) => {
+      const option = document.createElement("option");
+      option.value = String(value);
+      option.textContent = label;
+      option.dataset.label = label;
+      select.appendChild(option);
+    });
+  }
+
+  fillSelect(rMin, radiusChoices);
+  fillSelect(rMax, radiusChoices);
+  fillSelect(thetaMin, thetaChoices);
+  fillSelect(thetaMax, thetaChoices);
+  fillSelect(phiMin, phiChoices);
+  fillSelect(phiMax, phiChoices);
 
   const examples = {
     cart: {
@@ -125,9 +194,9 @@
     cylCell: {
       kind:"cyl",
       title:"Paralelepípedo cilíndrico",
-      bounds:[1.15,1.85, PI/6,PI/2, 0.35,1.35],
+      bounds:[1,2, PI/6,PI/2, 0.35,1.35],
       labels:["r","θ","z"],
-      limits:"1,15 ≤ r ≤ 1,85; π/6 ≤ θ ≤ π/2; 0,35 ≤ z ≤ 1,35",
+      limits:"1 ≤ r ≤ 2; π/6 ≤ θ ≤ π/2; 0,35 ≤ z ≤ 1,35",
       formulaTitle:"Elemento de volume em coordenadas cilíndricas",
       formula:"x=r cosθ, y=r senθ, z=z;   dV = r dr dθ dz",
       note:"A caixa em (r,θ,z) vira uma cunha anular. Para uma célula muito pequena, seus comprimentos característicos são aproximadamente dr, r dθ e dz; por isso aparece o Jacobiano r."
@@ -135,29 +204,29 @@
     cylinder: {
       kind:"cyl",
       title:"Cilindro completo",
-      bounds:[0,2, 0,2*PI, 0,3],
+      bounds:[1,2, 0,2*PI, 0,3],
       labels:["r","θ","z"],
-      limits:"0 ≤ r ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ z ≤ 3",
+      limits:"1 ≤ r ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ z ≤ 3",
       formulaTitle:"Volume do cilindro",
-      formula:"V = ∫₀²π ∫₀² ∫₀³ r dz dr dθ = 12π",
-      note:"No espaço (r,θ,z), os limites formam uma caixa. No espaço físico, essa caixa se enrola ao redor do eixo z e preenche um cilindro de raio 2 e altura 3."
+      formula:"V = ∫₀²π ∫₁² ∫₀³ r dz dr dθ",
+      note:"No espaço (r,θ,z), os limites formam uma caixa. No espaço físico, ela se enrola ao redor do eixo z e produz um cilindro ou uma casca cilíndrica, conforme os raios escolhidos."
     },
     cylSector: {
       kind:"cyl",
       title:"Setor cilíndrico anular",
-      bounds:[1,2.4, PI/8,3*PI/5, -0.5,1.5],
+      bounds:[1,3, PI/4,2*PI/3, -0.5,1.5],
       labels:["r","θ","z"],
-      limits:"1 ≤ r ≤ 2,4; π/8 ≤ θ ≤ 3π/5; −0,5 ≤ z ≤ 1,5",
+      limits:"1 ≤ r ≤ 3; π/4 ≤ θ ≤ 2π/3; −0,5 ≤ z ≤ 1,5",
       formulaTitle:"Integral tripla com limites constantes em cilíndricas",
-      formula:"∭_E f(x,y,z) dV = ∫_{π/8}^{3π/5} ∫₁^{2,4} ∫_{−0,5}^{1,5} f(r cosθ,r senθ,z) r dz dr dθ",
+      formula:"∭_E f(x,y,z) dV = ∫_{π/4}^{2π/3} ∫₁³ ∫_{−0,5}^{1,5} f(r cosθ,r senθ,z) r dz dr dθ",
       note:"É o análogo tridimensional exato de um setor anular em polares: duas superfícies cilíndricas, dois semiplanos radiais e dois planos horizontais."
     },
     sphCell: {
       kind:"sph",
       title:"Paralelepípedo esférico",
-      bounds:[1.2,2.0, PI/8,PI/2, PI/5,2*PI/5],
+      bounds:[1,2, PI/6,PI/2, PI/4,2*PI/3],
       labels:["ρ","θ","φ"],
-      limits:"1,2 ≤ ρ ≤ 2; π/8 ≤ θ ≤ π/2; π/5 ≤ φ ≤ 2π/5",
+      limits:"1 ≤ ρ ≤ 2; π/6 ≤ θ ≤ π/2; π/4 ≤ φ ≤ 2π/3",
       formulaTitle:"Elemento de volume em coordenadas esféricas",
       formula:"x=ρ senφ cosθ, y=ρ senφ senθ, z=ρ cosφ;   dV = ρ² senφ dρ dφ dθ",
       note:"A caixa em (ρ,θ,φ) vira uma pequena cunha esférica. Para uma célula pequena, os comprimentos são aproximadamente dρ, ρ senφ dθ e ρ dφ, produzindo o Jacobiano ρ² senφ."
@@ -165,27 +234,107 @@
     ball: {
       kind:"sph",
       title:"Bola completa",
-      bounds:[0,2, 0,2*PI, 0,PI],
+      bounds:[1,2, 0,2*PI, 0,PI],
       labels:["ρ","θ","φ"],
-      limits:"0 ≤ ρ ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ φ ≤ π",
+      limits:"1 ≤ ρ ≤ 2; 0 ≤ θ ≤ 2π; 0 ≤ φ ≤ π",
       formulaTitle:"Volume da bola",
-      formula:"V = ∫₀²π ∫₀^π ∫₀² ρ² senφ dρ dφ dθ = 32π/3",
-      note:"Outra vez, uma caixa retangular de limites no espaço das coordenadas se transforma num sólido curvo. Aqui ela preenche exatamente a bola de raio 2."
+      formula:"V = ∫₀²π ∫₀^π ∫₁² ρ² senφ dρ dφ dθ",
+      note:"Outra vez, uma caixa retangular de limites no espaço das coordenadas se transforma num sólido curvo. Com raio mínimo positivo, obtemos uma casca esférica; os ângulos podem recortar apenas um setor dela."
     },
     sphSector: {
       kind:"sph",
       title:"Setor de casca esférica",
-      bounds:[1,2.3, PI/6,2*PI/3, PI/6,PI/2],
+      bounds:[1,3, PI/6,2*PI/3, PI/6,PI/2],
       labels:["ρ","θ","φ"],
-      limits:"1 ≤ ρ ≤ 2,3; π/6 ≤ θ ≤ 2π/3; π/6 ≤ φ ≤ π/2",
+      limits:"1 ≤ ρ ≤ 3; π/6 ≤ θ ≤ 2π/3; π/6 ≤ φ ≤ π/2",
       formulaTitle:"Integral tripla com limites constantes em esféricas",
-      formula:"∭_E f dV = ∫_{π/6}^{2π/3} ∫_{π/6}^{π/2} ∫₁^{2,3} f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ",
+      formula:"∭_E f dV = ∫_{π/6}^{2π/3} ∫_{π/6}^{π/2} ∫₁³ f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ",
       note:"A região é limitada por duas esferas concêntricas, dois semiplanos de azimute constante e dois cones de φ constante. É o 'paralelepípedo' natural das coordenadas esféricas."
     }
   };
 
   function linspace(a,b,n){
     return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
+  }
+
+  function optionLabel(select) {
+    return select.options[select.selectedIndex]?.dataset.label || select.value;
+  }
+
+  function setSelectNearest(select, value) {
+    let best = 0, err = Infinity;
+    [...select.options].forEach((opt,i) => {
+      const e = Math.abs(Number(opt.value)-value);
+      if (e < err) { err=e; best=i; }
+    });
+    select.selectedIndex = best;
+  }
+
+  function refreshValidity() {
+    const r0=Number(rMin.value), r1=Number(rMax.value);
+    [...rMin.options].forEach(o => o.disabled = Number(o.value) >= r1);
+    [...rMax.options].forEach(o => o.disabled = Number(o.value) <= r0);
+
+    const t0=Number(thetaMin.value), t1=Number(thetaMax.value);
+    [...thetaMin.options].forEach(o => o.disabled = Number(o.value) >= t1);
+    [...thetaMax.options].forEach(o => o.disabled = Number(o.value) <= t0);
+
+    const p0=Number(phiMin.value), p1=Number(phiMax.value);
+    [...phiMin.options].forEach(o => o.disabled = Number(o.value) >= p1);
+    [...phiMax.options].forEach(o => o.disabled = Number(o.value) <= p0);
+  }
+
+  function configureControls(reset=true) {
+    const ex=examples[example.value];
+    limitBox.style.display = ex.kind==="cart" ? "none" : "block";
+    document.querySelectorAll(".radialName").forEach(el => el.textContent = ex.kind==="sph" ? "ρ" : "r");
+    document.querySelectorAll(".phiField").forEach(el => {
+      el.classList.toggle("disabled", ex.kind!=="sph");
+      el.querySelector("select").disabled = ex.kind!=="sph";
+    });
+
+    if (ex.kind==="cart") return;
+    if (reset) {
+      setSelectNearest(rMin, ex.bounds[0]);
+      setSelectNearest(rMax, ex.bounds[1]);
+      setSelectNearest(thetaMin, ex.bounds[2]);
+      setSelectNearest(thetaMax, ex.bounds[3]);
+      if (ex.kind==="sph") {
+        setSelectNearest(phiMin, ex.bounds[4]);
+        setSelectNearest(phiMax, ex.bounds[5]);
+      } else {
+        setSelectNearest(phiMin, 0);
+        setSelectNearest(phiMax, PI);
+      }
+    }
+    refreshValidity();
+  }
+
+  function currentBounds(ex) {
+    if (ex.kind==="cart") return ex.bounds.slice();
+    if (ex.kind==="cyl") {
+      return [Number(rMin.value),Number(rMax.value),Number(thetaMin.value),Number(thetaMax.value),ex.bounds[4],ex.bounds[5]];
+    }
+    return [Number(rMin.value),Number(rMax.value),Number(thetaMin.value),Number(thetaMax.value),Number(phiMin.value),Number(phiMax.value)];
+  }
+
+  function dynamicText(ex,B) {
+    if (ex.kind==="cart") return {limits:ex.limits, formula:ex.formula};
+    const rr0=String(B[0]).replace(".",","), rr1=String(B[1]).replace(".",",");
+    const t0=optionLabel(thetaMin), t1=optionLabel(thetaMax);
+    if (ex.kind==="cyl") {
+      const z0=String(B[4]).replace(".",","), z1=String(B[5]).replace(".",",");
+      const limits=`${rr0} ≤ r ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${z0} ≤ z ≤ ${z1}`;
+      if (example.value==="cylCell") return {limits, formula:"x=r cosθ, y=r senθ, z=z;   dV = r dr dθ dz"};
+      if (example.value==="cylinder") return {limits, formula:`V = ∫_{${t0}}^{${t1}} ∫_${rr0}^${rr1} ∫_${z0}^${z1} r dz dr dθ`};
+      return {limits, formula:`∭_E f(x,y,z) dV = ∫_{${t0}}^{${t1}} ∫_${rr0}^${rr1} ∫_${z0}^${z1} f(r cosθ,r senθ,z) r dz dr dθ`};
+    }
+
+    const p0=optionLabel(phiMin), p1=optionLabel(phiMax);
+    const limits=`${rr0} ≤ ρ ≤ ${rr1}; ${t0} ≤ θ ≤ ${t1}; ${p0} ≤ φ ≤ ${p1}`;
+    if (example.value==="sphCell") return {limits, formula:"x=ρ senφ cosθ, y=ρ senφ senθ, z=ρ cosφ;   dV = ρ² senφ dρ dφ dθ"};
+    if (example.value==="ball") return {limits, formula:`V = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${rr0}^${rr1} ρ² senφ dρ dφ dθ`};
+    return {limits, formula:`∭_E f dV = ∫_{${t0}}^{${t1}} ∫_{${p0}}^{${p1}} ∫_${rr0}^${rr1} f(ρ senφ cosθ,ρ senφ senθ,ρ cosφ) ρ² senφ dρ dφ dθ`};
   }
 
   function cloneCamera(div){
@@ -313,25 +462,27 @@
 
   function render(preserve=false){
     const ex=examples[example.value];
-    $("limits").textContent=ex.limits;
+    const B=currentBounds(ex);
+    const text=dynamicText(ex,B);
+    $("limits").textContent=text.limits;
     $("formulaTitle").textContent=ex.formulaTitle;
-    $("formula").textContent=ex.formula;
+    $("formula").textContent=text.formula;
     $("note").textContent=ex.note;
 
     const cp=preserve?cloneCamera(paramPlot):null, cf=preserve?cloneCamera(physicalPlot):null;
-    const pTraces=[boxMesh(ex.bounds, ex.kind==="sph"?"#a78bfa":"#60a5fa")];
-    if(wire.checked) pTraces.push(boxEdges(ex.bounds));
+    const pTraces=[boxMesh(B, ex.kind==="sph"?"#a78bfa":"#60a5fa")];
+    if(wire.checked) pTraces.push(boxEdges(B));
 
     let fTraces;
     if(ex.kind==="cart") {
-      fTraces=[boxMesh(ex.bounds,"#60a5fa")];
-      if(wire.checked) fTraces.push(boxEdges(ex.bounds));
+      fTraces=[boxMesh(B,"#60a5fa")];
+      if(wire.checked) fTraces.push(boxEdges(B));
     } else if(ex.kind==="cyl") {
-      fTraces=cylSurfaces(ex.bounds);
-      if(wire.checked) fTraces.push(...cylWire(ex.bounds));
+      fTraces=cylSurfaces(B);
+      if(wire.checked) fTraces.push(...cylWire(B));
     } else {
-      fTraces=sphSurfaces(ex.bounds);
-      if(wire.checked) fTraces.push(...sphWire(ex.bounds));
+      fTraces=sphSurfaces(B);
+      if(wire.checked) fTraces.push(...sphWire(B));
     }
 
     const pLayout=layout(ex.title+" em "+ex.labels.map(s=>"("+s+")").join(" "),ex.labels,false);
@@ -343,8 +494,19 @@
     ]).then(()=>Promise.all([restoreCamera(paramPlot,cp),restoreCamera(physicalPlot,cf)]));
   }
 
-  example.addEventListener("change",()=>render(false));
+  example.addEventListener("change",()=>{
+    configureControls(true);
+    render(false);
+  });
   wire.addEventListener("change",()=>render(true));
+  [rMin,rMax,thetaMin,thetaMax,phiMin,phiMax].forEach(select => {
+    select.addEventListener("change",()=>{
+      refreshValidity();
+      render(true);
+    });
+  });
+
+  configureControls(true);
   render(false);
 })();
 </script>
