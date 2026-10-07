@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lista de integrais duplas — visualizações</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.45;color:#1f2937;background:#f7f7f8}
+body{margin:0} main{max-width:1180px;margin:0 auto;padding:18px 14px 34px}
+.top{display:flex;justify-content:space-between;gap:14px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:clamp(1.5rem,3vw,2.25rem);margin:0} p{color:#4b5563}
+a{color:#111827;font-weight:650}.controls{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.5fr);gap:14px;margin:16px 0}
+.panel,.info{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px}
+label{display:block;font-weight:700;margin-bottom:6px} select{width:100%;min-height:44px;border:1px solid #d1d5db;border-radius:10px;padding:8px 10px;background:#fff;font-size:1rem}
+.info strong{display:block;font-size:.82rem;color:#6b7280;margin-top:7px}.math{font-family:"Times New Roman",serif;font-size:1.04rem;color:#111827}
+#plot{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;min-height:650px}
+.note{margin-top:14px;background:#eef2ff;border-left:4px solid #6366f1;border-radius:10px;padding:11px 13px;color:#374151}
+.legend{font-size:.92rem;color:#4b5563;margin:10px 2px 0}
+@media(max-width:760px){.controls{grid-template-columns:1fr}#plot{min-height:560px}}
+</style>
+</head>
+<body><main>
+<div class="top"><h1>Integrais duplas — visualizações da lista</h1><a href="../index.html">Voltar</a></div>
+<p>Escolha um item. A superfície mostra o integrando e a região cinza no plano <em>xy</em> mostra o domínio de integração. Nos exercícios de área, a altura foi tomada como 1 para que a própria área apareça como volume.</p>
+<section class="controls">
+<div class="panel"><label for="ex">Exercício</label><select id="ex"></select></div>
+<div class="info"><strong>Integral / região</strong><div class="math" id="formula"></div><strong>Resultado</strong><div class="math" id="result"></div></div>
+</section>
+<div id="plot" role="img" aria-label="Visualização 3D interativa da integral dupla"></div>
+<div class="legend">Gire a figura com o mouse ou com um dedo. A superfície colorida é <em>z=f(x,y)</em>; a projeção no plano <em>xy</em> é a região de integração.</div>
+<div class="note" id="note"></div>
+</main>
+<script>
+(() => {
+const pi=Math.PI;
+const E=[
+{n:1,t:"Retângulo — integrando constante",formula:"∫₀⁵ ∫₀⁴ 1 dx dy",result:"20",b:[0,4,0,5],inside:(x,y)=>true,f:(x,y)=>1,note:"O caso mais geométrico: a integral é o volume de um paralelepípedo de base 4×5 e altura 1."},
+{n:2,t:"Retângulo — z = 4eˣ",formula:"∫₀³ ∫₀² 4eˣ dx dy",result:"12(e²−1)",b:[0,2,0,3],inside:(x,y)=>true,f:(x,y)=>4*Math.exp(x),note:"A altura depende apenas de x; todas as fatias paralelas ao eixo y têm o mesmo perfil."},
+{n:3,t:"Retângulo trigonométrico",formula:"∫₀^π ∫₀^(π/2) 9 sen(x) cos(y) dy dx",result:"18",b:[0,pi,0,pi/2],inside:(x,y)=>true,f:(x,y)=>9*Math.sin(x)*Math.cos(y),note:"O integrando é não negativo em todo o retângulo, então a integral coincide com o volume sob a superfície."},
+{n:4,t:"Polinômio em um quadrado",formula:"∫₀¹ ∫₀¹ (12x²y + 12xy²) dx dy",result:"4",b:[0,1,0,1],inside:(x,y)=>true,f:(x,y)=>12*x*x*y+12*x*y*y,note:"O domínio é o quadrado unitário e a superfície cresce em direção ao vértice (1,1)."},
+{n:5,t:"Região triangular y ≤ x",formula:"∫₀⁴ ∫₀ˣ 16xy dy dx",result:"512",b:[0,4,0,4],inside:(x,y)=>y<=x+1e-9,f:(x,y)=>16*x*y,note:"A base é o triângulo 0≤y≤x≤4. A superfície z=16xy é cortada exatamente sobre essa região."},
+{n:6,t:"Região sob y = x²",formula:"∫₀¹ ∫₀^(x²) 5xy² dy dx",result:"5/24",b:[0,1,0,1],inside:(x,y)=>y<=x*x+1e-9,f:(x,y)=>5*x*y*y,note:"A fronteira curva y=x² aparece diretamente na projeção da superfície."},
+{n:7,t:"Entre y = x² e y = x",formula:"∫₀¹ ∫_(x²)ˣ (6x² + 6y²) dy dx",result:"18/35",b:[0,1,0,1],inside:(x,y)=>y>=x*x-1e-9&&y<=x+1e-9,f:(x,y)=>6*x*x+6*y*y,note:"A região está entre a parábola e a reta no primeiro quadrante."},
+{n:8,t:"Área entre y = −x e y = x²",formula:"−4≤x≤−1,  −x≤y≤x²",result:"27/2",b:[-4,-1,1,16],inside:(x,y)=>y>=-x-1e-9&&y<=x*x+1e-9,f:(x,y)=>1,note:"Como o objetivo é área, mostramos z=1 sobre a região. O volume sob esse plano é numericamente igual à área."},
+{n:9,t:"Troca de ordem — triângulo y ≤ x",formula:"∫₀¹ ∫ᵧ¹ 5e^(x²) dx dy",result:"(5/2)(e−1)",b:[0,1,0,1],inside:(x,y)=>y<=x+1e-9,f:(x,y)=>5*Math.exp(x*x),note:"A geometria deixa clara a troca: 0≤y≤x≤1, portanto a ordem invertida é ∫₀¹∫₀ˣ · dy dx."},
+{n:10,t:"Disco r ≤ 2 — z = r²",formula:"∬_D (x²+y²) dA,  D: x²+y²≤4",result:"8π",b:[-2,2,-2,2],inside:(x,y)=>x*x+y*y<=4+1e-9,f:(x,y)=>x*x+y*y,note:"Em polares, a superfície é z=r² e o domínio é simplesmente 0≤r≤2, 0≤θ≤2π."},
+{n:11,t:"Setor anular",formula:"1≤r≤3,  0≤θ≤π/3",result:"4π/3",b:[0,3,0,2.7],inside:(x,y)=>{const r=Math.hypot(x,y),th=Math.atan2(y,x);return r>=1-1e-9&&r<=3+1e-9&&th>=-1e-9&&th<=pi/3+1e-9},f:(x,y)=>1,note:"A altura 1 transforma a área do setor anular em um volume. Em polares, o jacobiano r aparece naturalmente."},
+{n:12,t:"Volume sob z = 9 − r²",formula:"z=9−x²−y² sobre x²+y²≤4",result:"28π",b:[-2,2,-2,2],inside:(x,y)=>x*x+y*y<=4+1e-9,f:(x,y)=>9-x*x-y*y,note:"O sólido fica sob o paraboloide z=9−r² e sobre o disco r≤2."}
+];
+const ex=document.getElementById("ex"),formula=document.getElementById("formula"),result=document.getElementById("result"),note=document.getElementById("note"),plot=document.getElementById("plot");
+E.forEach((e,i)=>{const o=document.createElement("option");o.value=i;o.textContent=e.n+". "+e.t;ex.appendChild(o)});
+function lin(a,b,n){return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1))}
+function draw(i){
+ const e=E[i], [xmin,xmax,ymin,ymax]=e.b, xs=lin(xmin,xmax,70), ys=lin(ymin,ymax,70);
+ const z=[],floor=[]; let zmax=0;
+ for(const y of ys){const zr=[],fr=[];for(const x of xs){if(e.inside(x,y)){const v=e.f(x,y);zr.push(v);fr.push(0);if(Number.isFinite(v))zmax=Math.max(zmax,v)}else{zr.push(null);fr.push(null)}}z.push(zr);floor.push(fr)}
+ const traces=[
+  {type:"surface",x:xs,y:ys,z:floor,showscale:false,opacity:.38,hoverinfo:"skip",name:"Região"},
+  {type:"surface",x:xs,y:ys,z:z,showscale:false,opacity:.88,name:"z=f(x,y)"}
+ ];
+ const layout={margin:{l:0,r:0,t:45,b:0},title:{text:"Exercício "+e.n+" — "+e.t,font:{size:17}},scene:{xaxis:{title:"x"},yaxis:{title:"y"},zaxis:{title:"z"},aspectmode:"auto",camera:{eye:{x:1.45,y:1.5,z:1.15}}},showlegend:false};
+ Plotly.react(plot,traces,layout,{responsive:true,displaylogo:false});
+ formula.textContent=e.formula; result.textContent=e.result; note.textContent=e.note;
+}
+ex.addEventListener("change",()=>draw(+ex.value)); draw(0);
+})();
+</script></body></html>
