@@ -52,7 +52,7 @@ const ex=document.getElementById("ex"),formula=document.getElementById("formula"
 E.forEach((e,i)=>{const o=document.createElement("option");o.value=i;o.textContent=e.n+". "+e.t;ex.appendChild(o)});
 function lin(a,b,n){return Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1))}
 function draw(i){
- const e=E[i], [xmin,xmax,ymin,ymax]=e.b, xs=lin(xmin,xmax,70), ys=lin(ymin,ymax,70);
+ const e=E[i], [xmin,xmax,ymin,ymax]=e.b, xs=lin(xmin,xmax,140), ys=lin(ymin,ymax,140);
  const z=[],floor=[]; let zmax=0;
  for(const y of ys){const zr=[],fr=[];for(const x of xs){if(e.inside(x,y)){const v=e.f(x,y);zr.push(v);fr.push(0);if(Number.isFinite(v))zmax=Math.max(zmax,v)}else{zr.push(null);fr.push(null)}}z.push(zr);floor.push(fr)}
  const traces=[
