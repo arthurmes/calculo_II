@@ -44,3 +44,5 @@ footer { font-size:.85rem; color:#64748b; margin-top:22px; }
  .plotbox { min-height:470px; }
  #plot { height:470px; }
 }
+
+.check[hidden] { display:none; }
