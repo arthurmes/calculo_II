@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Campos vetoriais e aplicações físicas | Cálculo II</title>
+<link rel="stylesheet" href="../assets/site.css"><link rel="stylesheet" href="vetoriais.css">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script></head>
+<body><main>
+<header class="lab-header"><h1>Campos vetoriais e aplicações físicas</h1><nav><a href="../index.html">← Início</a><a href="curvas.html">← Curvas e derivadas</a></nav></header>
+<p class="intro">Um campo associa um vetor a cada ponto do domínio. Compare campos de velocidade, de forças e gradientes, inclusive campos de quadrado inverso da gravitação e da lei de Coulomb. Setas mostram amostras do campo; as curvas mostram linhas integrais.</p>
+<section class="lab-grid"><aside class="panel">
+<h2>Exemplos</h2><div class="form-field"><label for="example">Campo vetorial</label><select id="example"></select></div>
+<div class="form-field" id="chargeControls" hidden>
+<label for="sourceCharge">Carga fonte Q (lei de Coulomb)</label><select id="sourceCharge"><option value="1">Positiva (+)</option><option value="-1">Negativa (−)</option></select>
+<label for="probeCharge" style="margin-top:9px">Carga teste q</label><select id="probeCharge"><option value="1">Positiva (+)</option><option value="-1">Negativa (−)</option></select>
+<p class="subtle">Sinal de qQ: positivo indica repulsão; negativo, atração. No dipolo representamos o campo elétrico (força por carga teste positiva).</p></div>
+<div class="form-field"><label for="density">Densidade da malha: <output id="densityValue">9</output> por eixo</label><input id="density" type="range" min="5" max="13" step="2" value="9"></div>
+<div class="form-field"><label for="scale">Escala das setas: <output id="scaleValue">1</output>×</label><input id="scale" type="range" min="0.25" max="1.8" step="0.05" value="1"></div>
+<label class="check"><input id="normalize" type="checkbox"> Normalizar comprimentos das setas</label>
+<label class="check"><input id="lines" type="checkbox" checked> Mostrar linhas integrais</label>
+<button id="resetView" class="secondary" type="button">Restaurar enquadramento</button>
+<p class="subtle">Vetores muito grandes são comprimidos para clareza. A legenda e os valores do campo permanecem sem essa compressão. Singularidades são excluídas da malha e da integração.</p>
+</aside><section><div class="panel"><h2 id="title"></h2><div class="equation" id="formula"></div><p id="domain" class="subtle compact"></p></div>
+<div class="plotbox"><div id="plot" aria-label="Gráfico interativo do campo vetorial"></div></div>
+<div class="legend"><span><b style="background:#2563eb"></b>setas do campo</span><span><b style="background:#16a34a"></b>linhas integrais</span><span><b style="background:#e11d48"></b>fonte ou singularidade</span></div>
+<div class="readouts"><div class="metric"><small>Divergência</small><strong id="divergence"></strong></div><div class="metric"><small>Rotacional</small><strong id="curl"></strong></div><div class="metric"><small>Tipo</small><strong id="type"></strong></div></div>
+<div class="explain"><strong>Significado físico e matemático</strong><p id="description"></p><p id="question"></p><p id="physics" class="subtle"></p></div></section></section>
+<footer>Base: Anton, <i>Cálculo</i>, §15.1 (campos vetoriais, lei de Coulomb, campos de quadrado inverso, gradiente, divergência e rotacional). Outros modelos são extensões físicas ilustrativas. Em exemplos eletrostáticos e gravitacionais as constantes foram normalizadas para 1.</footer>
+</main><script src="campos.js"></script></body></html>
