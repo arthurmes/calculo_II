@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funções vetoriais: curvas e derivadas | Cálculo II</title>
+<link rel="stylesheet" href="../assets/site.css"><link rel="stylesheet" href="vetoriais.css">
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script></head>
+<body><main>
+<header class="lab-header"><h1>Curvas e funções vetoriais</h1><nav><a href="../index.html">← Início</a><a href="campos.html">Campos vetoriais →</a></nav></header>
+<p class="intro">Explore trajetórias em duas e três dimensões. Arraste o parâmetro <b>t</b> para acompanhar a ponta do vetor posição, a tangente e a aceleração. Nas curvas espaciais, gire a figura com o mouse e use a roda para aproximar.</p>
+<section class="lab-grid"><aside class="panel">
+<h2>Escolha uma curva</h2>
+<div class="form-field"><label for="example">Exemplos organizados por dimensão</label><select id="example"></select></div>
+<div class="form-field"><label for="time">Parâmetro: <output id="timeValue"></output></label><input type="range" id="time"><div class="inline"><button type="button" id="play">▶ Animar</button><button type="button" id="restart" class="secondary">Reiniciar</button></div></div>
+<h2>Vetores e elementos geométricos</h2>
+<label class="check"><input type="checkbox" id="position" checked> Vetor posição r(t)</label>
+<label class="check"><input type="checkbox" id="velocity" checked> Derivada r′(t) (tangente/velocidade)</label>
+<label class="check"><input type="checkbox" id="acceleration"> Derivada r″(t) (aceleração)</label>
+<label class="check"><input type="checkbox" id="tangent" checked> Reta tangente</label>
+<label class="check"><input type="checkbox" id="orient" checked> Sentido de orientação</label>
+<div class="form-field"><label for="vectorScale">Escala de exibição dos vetores: <output id="scaleValue">1</output>×</label><input type="range" id="vectorScale" min="0.15" max="2" step="0.05" value="1"></div>
+<p class="subtle">O parâmetro nem sempre é tempo físico. Quando é, r′(t) é a velocidade e r″(t), a aceleração. A escala acima modifica apenas o desenho dos vetores.</p>
+<div id="warning" aria-live="polite"></div>
+</aside>
+<section><div class="panel"><h2 id="title">Curva</h2><div class="equation" id="formula"></div><p id="domain" class="subtle compact"></p></div>
+<div class="plotbox"><div id="plot" aria-label="Gráfico interativo da curva e de seus vetores"></div></div>
+<div class="legend"><span><b style="background:#2563eb"></b>trajetória</span><span><b style="background:#64748b"></b>posição</span><span><b style="background:#e11d48"></b>r′</span><span><b style="background:#0891b2"></b>r″</span><span><b style="background:#d97706"></b>tangente</span></div>
+<div class="readouts"><div class="metric"><small>Posição r(t)</small><strong id="outPosition"></strong></div><div class="metric"><small>Derivada r′(t)</small><strong id="outVelocity"></strong></div><div class="metric"><small>Derivada r″(t)</small><strong id="outAcceleration"></strong></div><div class="metric"><small>Rapidez ‖r′(t)‖</small><strong id="outSpeed"></strong></div><div class="metric"><small>Curvatura κ(t)</small><strong id="outCurvature"></strong></div></div>
+<div class="explain"><strong>Interpretação e proposta de exploração</strong><p id="description"></p><p id="question"></p></div></section></section>
+<footer>Base didática: Anton, <i>Cálculo</i>, §§10.1, 12.1 e 12.2 (documento fornecido). Curvatura e modelos físicos são extensões para exploração.</footer>
+</main><script src="curvas.js"></script></body></html>
