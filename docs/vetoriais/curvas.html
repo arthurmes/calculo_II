@@ -24,7 +24,15 @@
 <section><div class="panel"><h2 id="title">Curva</h2><div class="equation" id="formula"></div><p id="domain" class="subtle compact"></p></div>
 <div class="plotbox"><div id="plot" aria-label="Gráfico interativo da curva e de seus vetores"></div></div>
 <div class="legend"><span><b style="background:#2563eb"></b>trajetória</span><span><b style="background:#64748b"></b>posição</span><span><b style="background:#e11d48"></b>r′</span><span><b style="background:#0891b2"></b>r″</span><span><b style="background:#d97706"></b>tangente</span></div>
-<div class="readouts"><div class="metric"><small>Posição r(t)</small><strong id="outPosition"></strong></div><div class="metric"><small>Derivada r′(t)</small><strong id="outVelocity"></strong></div><div class="metric"><small>Derivada r″(t)</small><strong id="outAcceleration"></strong></div><div class="metric"><small>Rapidez ‖r′(t)‖</small><strong id="outSpeed"></strong></div><div class="metric"><small>Curvatura κ(t)</small><strong id="outCurvature"></strong></div></div>
-<div class="explain"><strong>Interpretação e proposta de exploração</strong><p id="description"></p><p id="question"></p></div></section></section>
+<div class="readouts"><div class="metric"><small>Posição r(t)</small><strong id="outPosition"></strong></div><div class="metric"><small>Derivada r′(t)</small><strong id="outVelocity"></strong></div><div class="metric"><small>Derivada r″(t)</small><strong id="outAcceleration"></strong></div><div class="metric"><small>Rapidez ‖r′(t)‖</small><strong id="outSpeed"></strong></div><div class="metric"><small>Curvatura κ(t)</small><strong id="outCurvature"></strong></div>
+ <div class="metric"><small>Comprimento de arco desde t mínimo</small><strong id="outArc"></strong></div>
+ <div class="metric"><small>Distância ao ponto inicial</small><strong id="outDisplacement"></strong></div></div>
+<div class="explain"><strong>Geometria da derivada</strong>
+ <p>Num ponto regular t₀ (isto é, r′(t₀) ≠ 0), a reta tangente é ℓ(λ) = r(t₀) + λr′(t₀).
+ O comprimento de arco percorrido no intervalo [a,t] é ∫ₐᵗ ‖r′(s)‖ ds; ele geralmente
+ não coincide com a distância direta entre os extremos. Para curvas no plano,
+ κ = |x′y″−y′x″|/‖r′‖³; no espaço, κ=‖r′×r″‖/‖r′‖³.
+ Em pontos singulares, essas expressões podem não estar definidas.</p></div>
+ <div class="explain"><strong>Interpretação e proposta de exploração</strong><p id="description"></p><p id="question"></p></div></section></section>
 <footer>Base didática: Anton, <i>Cálculo</i>, §§10.1, 12.1 e 12.2 (documento fornecido). Curvatura e modelos físicos são extensões para exploração.</footer>
 </main><script src="curvas.js"></script></body></html>
