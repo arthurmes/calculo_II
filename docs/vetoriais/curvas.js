@@ -142,6 +142,7 @@
     stop();
     current=curves.find(c=>c.id===list.value)||curves[0];currentCamera=null;
     bounds=extent(current);
+    $("surfaceControl").hidden=!["horizontalCircle","helix","ellipticHelix","twistedCubic","intersection","cone","torusKnot"].includes(current.id);
     $("time").min=current.min;$("time").max=current.max;$("time").step=(current.max-current.min)/2000;
     $("time").value=current.min+(current.max-current.min)*.22;
     $("title").textContent=current.title;$("formula").textContent=current.formula;
@@ -154,6 +155,42 @@
     if(v.length===2)return Math.abs(v[0]*a[1]-v[1]*a[0])/speed**3;
     return norm(cross(v,a))/speed**3;
   }
+  function surfaceTraces(e){
+  const mesh=(f,u0,u1,v0,v1,nu=40,nv=30,color="#94a3b8",alpha=.19)=>{
+    const x=[],y=[],z=[];
+    for(let j=0;j<nv;j++){
+      const xr=[],yr=[],zr=[],v=v0+(v1-v0)*j/(nv-1);
+      for(let i=0;i<nu;i++){
+        const u=u0+(u1-u0)*i/(nu-1),p=f(u,v);
+        xr.push(p[0]);yr.push(p[1]);zr.push(p[2]);
+      }
+      x.push(xr);y.push(yr);z.push(zr);
+    }
+    return {type:"surface",x,y,z,opacity:alpha,showscale:false,showlegend:false,
+      colorscale:[[0,color],[1,color]],hoverinfo:"skip",name:"Superfície de referência"};
+  };
+  const full=2*Math.PI;
+  switch(e.id){
+    case "horizontalCircle":
+      return [mesh((x,y)=>[x,y,2],-2.5,2.5,-2.5,2.5)];
+    case "helix":
+      return [mesh((u,z)=>[2*Math.cos(u),2*Math.sin(u),z],0,full,0,.45*4*Math.PI,55,20)];
+    case "ellipticHelix":
+      return [mesh((u,z)=>[3*Math.cos(u),Math.sin(u),z],0,full,0,.35*4*Math.PI,55,20)];
+    case "twistedCubic":
+      return [mesh((x,z)=>[x,x*x,z],-1.6,1.6,-4.2,4.2,32,32,"#94a3b8",.14),
+              mesh((x,y)=>[x,y,x*x*x],-1.6,1.6,0,2.65,32,32,"#fca5a5",.14)];
+    case "intersection":
+      return [mesh((x,y)=>[x,y,x*x+y*y],-1.6,1.6,-1.6,1.6,34,34,"#94a3b8",.20),
+              mesh((x,z)=>[x,x,z],-1.6,1.6,0,5.12,32,32,"#fca5a5",.19)];
+    case "cone":
+      return [mesh((u,h)=>[h*Math.cos(u),h*Math.sin(u),h],0,full,0,.25*4*Math.PI,52,30)];
+    case "torusKnot":
+      return [mesh((u,v)=>[(2+.62*Math.cos(v))*Math.cos(u),
+        (2+.62*Math.cos(v))*Math.sin(u),.62*Math.sin(v)],0,full,0,full,55,33,"#cbd5e1",.14)];
+    default:return [];
+  }
+}
   function render() {
     const t=Number($("time").value), e=current, dim=e.dim, p=e.r(t),v=e.d(t),a=e.dd(t);
     const speed=norm(v),sc=Number($("vectorScale").value);
@@ -166,7 +203,9 @@
     const line={x:xs,y:ys,type:dim===3?"scatter3d":"scatter",mode:"lines",
       line:{color:"#2563eb",width:dim===3?7:3},name:"Trajetória",hoverinfo:"skip",showlegend:false};
     if(dim===3)line.z=zs;
-    const tr=[line], point={x:[p[0]],y:[p[1]],type:line.type,mode:"markers",
+    const tr=[line];
+    if(dim===3 && $("surfaces").checked)tr.unshift(...surfaceTraces(e));
+    const point={x:[p[0]],y:[p[1]],type:line.type,mode:"markers",
       marker:{color:"#111827",size:dim===3?6:11},name:"Ponto",showlegend:false,hoverinfo:"skip"};
     if(dim===3)point.z=[p[2]];
     tr.push(point);
@@ -226,7 +265,7 @@
   }
   list.addEventListener("change",choose);
   $("time").addEventListener("input",render);
-  ["position","velocity","acceleration","tangent","orient","vectorScale"].forEach(id=>$(id).addEventListener("input",render));
+  ["position","velocity","acceleration","tangent","orient","surfaces","vectorScale"].forEach(id=>$(id).addEventListener("input",render));
   $("restart").addEventListener("click",()=>{$("time").value=current.min;render();});
   $("play").addEventListener("click",()=>{
     if(timer!==null){stop();return;}
