@@ -135,7 +135,9 @@
       const pad=Math.max(.65,(b-a)*.14);lo.push(a-pad);hi.push(b+pad);
     }
     for(let j=0;j<e.dim;j++){lo[j]=Math.min(lo[j],-0.2);hi[j]=Math.max(hi[j],0.2);}
-    return {pts,lo,hi};
+    const avgSpeed=pts.reduce((s,p,i)=>s+norm(e.d(e.min+(e.max-e.min)*i/n)),0)/pts.length;
+    const avgAccel=pts.reduce((s,p,i)=>s+norm(e.dd(e.min+(e.max-e.min)*i/n)),0)/pts.length;
+    return {pts,lo,hi,avgSpeed,avgAccel};
   }
   function stop(){if(timer!==null){clearInterval(timer);timer=null;} $("play").textContent="▶ Animar";}
   function choose(){
@@ -191,6 +193,13 @@
     default:return [];
   }
 }
+  function lengthUntil(e,t){
+    if(t<=e.min)return 0;
+    const n=320,h=(t-e.min)/n;
+    let total=norm(e.d(e.min))+norm(e.d(t));
+    for(let i=1;i<n;i++)total+=(i%2?4:2)*norm(e.d(e.min+i*h));
+    return total*h/3;
+  }
   function render() {
     const t=Number($("time").value), e=current, dim=e.dim, p=e.r(t),v=e.d(t),a=e.dd(t);
     const speed=norm(v),sc=Number($("vectorScale").value);
@@ -198,6 +207,8 @@
     $("outPosition").textContent=vecfmt(p);$("outVelocity").textContent=vecfmt(v);
     $("outAcceleration").textContent=vecfmt(a);$("outSpeed").textContent=fmt(speed);
     $("outCurvature").textContent=fmt(curvature(v,a));
+    $("outArc").textContent=fmt(lengthUntil(e,t));
+    $("outDisplacement").textContent=fmt(norm(p.map((x,i)=>x-e.r(e.min)[i])));
     $("warning").textContent=speed<1e-7?"Ponto singular: r′(t)=0. A reta tangente não é determinada pelo vetor derivada neste instante.":"";
     const xs=bounds.pts.map(x=>x[0]),ys=bounds.pts.map(x=>x[1]),zs=dim===3?bounds.pts.map(x=>x[2]):null;
     const line={x:xs,y:ys,type:dim===3?"scatter3d":"scatter",mode:"lines",
@@ -210,7 +221,8 @@
     if(dim===3)point.z=[p[2]];
     tr.push(point);
     const span=Math.max(...bounds.hi.map((x,i)=>x-bounds.lo[i]));
-    const rel=.20*span*sc;
+    const rel=.17*span*sc*Math.min(2.6,Math.max(.08,speed/Math.max(1e-6,bounds.avgSpeed)));
+    const relAcc=.17*span*sc*Math.min(2.6,Math.max(.08,norm(a)/Math.max(1e-6,bounds.avgAccel)));
     if($("orient").checked){
       for(let i=1;i<=5;i++){
         const u=e.min+(e.max-e.min)*i/7, pp=e.r(u),vv=e.d(u),length=norm(vv);
@@ -226,7 +238,7 @@
       const ar=arrow(p,finish,"#e11d48","r′(t)",dim);if(ar)tr.push(ar);
     }
     if($("acceleration").checked && norm(a)>1e-7){
-      const finish=p.map((x,i)=>x+a[i]/norm(a)*rel);
+      const finish=p.map((x,i)=>x+a[i]/norm(a)*relAcc);
       const ar=arrow(p,finish,"#0891b2","r″(t)",dim);if(ar)tr.push(ar);
     }
     if($("tangent").checked && speed>1e-7){
